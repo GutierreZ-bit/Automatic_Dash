@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision One — Dashboard de Faturamento</title>
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --panel:#14141d;
+    --panel-2:#1a1a24;
+    --border:rgba(255,255,255,.07);
+    --border-strong:rgba(255,255,255,.14);
+    --text:#eef0f5;
+    --text-dim:#9096a8;
+    --text-faint:#5c6274;
+    --teal:#2dd4bf;
+    --teal-glow:rgba(45,212,191,.35);
+    --blue:#5b8cff;
+    --blue-glow:rgba(91,140,255,.35);
+    --orange:#ff9d4d;
+    --orange-glow:rgba(255,157,77,.35);
+    --red:#ff6a6a;
+    --violet:#a78bfa;
+    --amber:#facc15;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -8%, rgba(45,212,191,.08), transparent 60%),
+      radial-gradient(ellipse 800px 500px at 90% 0%, rgba(91,140,255,.08), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:#2a2a38; border-radius:10px;}
+  ::-webkit-scrollbar-thumb:hover{background:#3a3a4a;}
+
+  .wrap{max-width:1400px; margin:0 auto; padding:0 32px;}
+
+  /* HEADER */
+  header{
+    padding:40px 0 28px;
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap;
+    animation:fadeDown .6s ease both;
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand-mark{
+    width:44px; height:44px; border-radius:12px;
+    background:linear-gradient(135deg,var(--teal),var(--blue));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:18px; color:#04100e;
+    box-shadow:0 0 24px var(--teal-glow);
+  }
+  h1{font-size:26px; font-weight:800; letter-spacing:-.02em;}
+  .subtitle{color:var(--text-dim); font-size:13.5px; margin-top:2px;}
+  .period-pill{
+    display:flex; align-items:center; gap:8px;
+    background:var(--panel); border:1px solid var(--border-strong);
+    padding:8px 8px 8px 16px; border-radius:100px; font-size:13px;
+  }
+  .period-pill .dot{width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal-glow);}
+  .filter-group{display:flex; gap:4px; background:var(--panel-2); padding:4px; border-radius:100px; border:1px solid var(--border);}
+  .filter-btn{
+    border:none; background:transparent; color:var(--text-dim);
+    padding:6px 14px; border-radius:100px; font-size:12.5px; font-weight:600;
+    cursor:pointer; transition:all .2s ease; font-family:inherit;
+  }
+  .filter-btn.active{background:linear-gradient(135deg,var(--teal),var(--blue)); color:#04100e;}
+  .filter-btn:not(.active):hover{color:var(--text); background:rgba(255,255,255,.05);}
+
+  /* KPI CARDS */
+  .kpi-grid{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:16px;
+    margin-top:28px;
+  }
+  .kpi{
+    background:var(--panel); border:1px solid var(--border);
+    padding:20px; border-radius:12px;
+    animation:fadeUp .6s ease both;
+  }
+  .kpi-label{
+    font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:8px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .kpi-value{
+    font-size:22px; font-weight:800; color:var(--text);
+    line-height:1.1; margin-bottom:4px;
+  }
+  .kpi-sub{
+    font-size:11px; color:var(--text-faint); margin-bottom:12px;
+  }
+  .kpi-delta{
+    font-size:11px; font-weight:600; padding:4px 8px;
+    background:rgba(74,222,128,.15); color:#4ade80; border-radius:6px;
+  }
+  .kpi-delta.delta-down{
+    background:rgba(255,106,106,.15); color:#ff6a6a;
+  }
+
+  /* SECTION TITLES */
+  .section-title{
+    display:flex; align-items:center; gap:16px;
+    margin-top:40px; margin-bottom:20px;
+    font-size:14px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:.05em;
+  }
+  .section-title .line{
+    flex:1; height:1px; background:var(--border);
+  }
+
+  /* GRIDS */
+  .grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
+  .grid2b{display:grid; grid-template-columns:1.2fr 1fr; gap:20px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+
+  /* CARDS */
+  .card{
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; overflow:hidden;
+    animation:fadeUp .6s ease both;
+  }
+  .card-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:16px; border-bottom:1px solid var(--border);
+  }
+  .card-title{
+    font-size:14px; font-weight:700; color:var(--text);
+  }
+  .card-badge{
+    font-size:10px; font-weight:600; color:var(--text-faint);
+    background:var(--panel-2); padding:3px 8px; border-radius:4px;
+    text-transform:uppercase; letter-spacing:.05em;
+  }
+  .chart-box{
+    height:300px; padding:12px;
+    position:relative;
+  }
+  .chart-box.tall{
+    height:420px;
+  }
+  .insight{
+    padding:12px 16px 16px; font-size:12px; line-height:1.6;
+    color:var(--text-dim); border-top:1px solid var(--border);
+  }
+  .insight b{
+    color:var(--text); font-weight:700;
+  }
+
+  /* TABLE */
+  .table-wrap{
+    margin-top:20px; margin-bottom:40px;
+    overflow-x:auto;
+  }
+  table{
+    width:100%; border-collapse:collapse;
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; overflow:hidden;
+  }
+  th{
+    background:var(--panel-2); padding:12px 16px;
+    text-align:left; font-size:12px; font-weight:700;
+    color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em;
+    border-bottom:1px solid var(--border);
+  }
+  td{
+    padding:12px 16px; font-size:12px; color:var(--text-dim);
+    border-bottom:1px solid rgba(255,255,255,.03);
+  }
+  tr:last-child td{
+    border-bottom:none;
+  }
+  td.mono{
+    font-family:'Monaco','Courier New',monospace; font-weight:600; color:var(--text);
+  }
+  .tag-good{background:rgba(74,222,128,.15); color:#4ade80 !important; border-radius:4px; padding:2px 6px; display:inline-block;}
+  .tag-warn{background:rgba(255,157,77,.15); color:#ff9d4d !important; border-radius:4px; padding:2px 6px; display:inline-block;}
+  .tag-bad{background:rgba(255,106,106,.15); color:#ff6a6a !important; border-radius:4px; padding:2px 6px; display:inline-block;}
+
+  /* FOOTER */
+  footer{
+    text-align:center; padding:20px; font-size:12px; color:var(--text-faint);
+    border-top:1px solid var(--border); margin-top:60px;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown{from{opacity:0; transform:translateY(-12px)} to{opacity:1; transform:translateY(0)}}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:translateY(0)}}
+
+  /* RESPONSIVE */
+  @media (max-width:1024px){
+    .grid2, .grid2b, .grid3{grid-template-columns:1fr;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:640px){
+    .wrap{padding:0 16px;}
+    header{padding:24px 0 16px;}
+    h1{font-size:20px;}
+    .kpi-grid{grid-template-columns:1fr;}
+    .filter-group{flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="brand">
+        <div class="brand-mark">V</div>
+        <div>
+          <h1>Vision One Dashboard</h1>
+          <div class="subtitle">Cadeia de Faturamento — Análise consolidada</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:16px; align-items:flex-end;">
+      <div class="period-pill"><span class="dot"></span> 27.484 guias analisadas</div>
+      <div class="filter-group" id="filterGroup">
+        <button class="filter-btn active" data-period="all">Trimestre</button>
+        <button class="filter-btn" data-period="2026-05">Maio</button>
+        <button class="filter-btn" data-period="2026-06">Junho</button>
+        <button class="filter-btn" data-period="2026-07">Julho</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- ROW 1: Evolução + Convênio -->
+  <div class="section-title"><span>Visão Financeira</span><span class="line"></span></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Evolução Mensal — Bruto vs. Líquido</div></div>
+        <div class="card-badge">R$ · eixo duplo</div>
+      </div>
+      <div class="chart-box tall"><canvas id="chartEvolucao"></canvas></div>
+      <div class="insight" id="insightEvolucao"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Faturamento por Convênio/Plano Bradesco</div></div>
+        <div class="card-badge">9 variantes</div>
+      </div>
+      <div class="chart-box tall"><canvas id="chartConvenio"></canvas></div>
+      <div class="insight" id="insightConvenio"></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Unidade + Top procedimentos -->
+  <div class="section-title"><span>Operação por Unidade e Serviço</span><span class="line"></span></div>
+  <div class="grid2b">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Faturamento por Unidade Hospitalar</div></div>
+        <div class="card-badge">10 unidades</div>
+      </div>
+      <div class="chart-box"><canvas id="chartUnidade"></canvas></div>
+      <div class="insight" id="insightUnidade"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Top 10 Procedimentos Faturados</div></div>
+        <div class="card-badge">por valor</div>
+      </div>
+      <div class="chart-box"><canvas id="chartProcedimento"></canvas></div>
+      <div class="insight" id="insightProcedimento"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Glosas -->
+  <div class="section-title"><span>Glosas e Recebimento</span><span class="line"></span></div>
+  <div class="grid3">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Glosas por Estágio do Recurso</div></div>
+        <div class="card-badge">R$</div>
+      </div>
+      <div class="chart-box"><canvas id="chartGlosaCategoria"></canvas></div>
+      <div class="insight" id="insightGlosaCategoria"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Taxa de Glosa ao Longo do Tempo</div></div>
+        <div class="card-badge">% sobre bruto</div>
+      </div>
+      <div class="chart-box"><canvas id="chartTaxaGlosa"></canvas></div>
+      <div class="insight" id="insightTaxaGlosa"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Status de Recebimento das Guias</div></div>
+        <div class="card-badge">R$</div>
+      </div>
+      <div class="chart-box"><canvas id="chartStatus"></canvas></div>
+      <div class="insight" id="insightStatus"></div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Responsáveis -->
+  <div class="section-title"><span>Responsáveis pelo Faturamento</span><span class="line"></span></div>
+  <div class="card">
+    <div class="card-head">
+      <div><div class="card-title">Top 5 Responsáveis por Volume Faturado (Criação de Conta)</div></div>
+      <div class="card-badge">R$</div>
+    </div>
+    <div class="chart-box"><canvas id="chartResponsavel"></canvas></div>
+    <div class="insight" id="insightResponsavel"></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section-title"><span>Resumo Mensal Detalhado</span><span class="line"></span></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Mês</th><th>Guias</th><th>Faturamento Bruto</th><th>Glosas</th><th>Faturamento Líquido</th><th>Taxa de Glosa</th></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <footer>Dados — gerado em 26/08/2026 · Base: Cadeia de Faturamento Vision One · Análise de 27.484 guias (mai–jul/2026) · Dashboard autocontido (offline)</footer>
+</div>
+
+<!-- CHART.JS v4.4.4 - EMBEDDED COMPLETE LIBRARY (minificado) -->
+<script>!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).Chart=e()}(this,(function(){"use strict";var t=Object.freeze({__proto__:null,get Colors(){return Go},get Decimation(){return Qo},get Filler(){return ma},get Legend(){return ya},get SubTitle(){return ka},get Title(){return Ma},get Tooltip(){return Ba}});function e(){}const i=(()=>{let t=0;return()=>t++})();function s(t){return null==t}function n(t){if(Array.isArray&&Array.isArray(t))return!0;const e=Object.prototype.toString.call(t);return"[object"===e.slice(0,7)&&"Array]"===e.slice(-6)}function o(t){return null!==t&&"[object Object]"===Object.prototype.toString.call(t)}function a(t){return("number"==typeof t||t instanceof Number)&&isFinite(+t)}function r(t,e){return a(t)?t:e}function l(t,e){return void 0===t?e:t}const h=(t,e)=>"string"==typeof t&&t.endsWith("%")?parseFloat(t)/100:+t/e,c=(t,e)=>"string"==typeof t&&t.endsWith("%")?parseFloat(t)/100*e:+t;function d(t,e,i){if(t&&"function"==typeof t.call)return t.apply(i,e)}function u(t,e,i,s){let a,r,l;if(n(t))if(r=t.length,s)for(a=r-1;a>=0;a--)e.call(i,t[a],a);else for(a=0;a<r;a++)e.call(i,t[a],a);else if(o(t))for(l=Object.keys(t),r=l.length,a=0;a<r;a++)e.call(i,t[l[a]],l[a])}function f(t,e){let i,s,n,o;if(!t||!e||t.length!==e.length)return!1;for(i=0,s=t.length;i<s;++i)if(n=t[i],o=e[i],n.datasetIndex!==o.datasetIndex||n.index!==o.index)return!1;return!0}function g(t){if(n(t))return t.map(g);if(o(t)){const e=Object.create(null),i=Object.keys(t),s=i.length;let n=0;for(;n<s;++n)e[i[n]]=g(t[i[n]]);return e}return t}function p(t){return-1===["__proto__","prototype","constructor"].indexOf(t)}function m(t,e,i,s){if(!p(t))return;const n=e[t],a=i[t];o(n)&&o(a)?x(n,a,s):e[t]=g(a)}function x(t,e,i){const s=n(e)?e:[e],a=s.length;if(!o(t))return t;const r=(i=i||{}).merger||m;let l;for(let e=0;e<a;++e){if(l=s[e],!o(l))continue;const n=Object.keys(l);for(let e=0,s=n.length;e<s;++e)r(n[e],t,l,i)}return t}function b(t,e){return x(t,e,{merger:_})}function _(t,e,i){if(!p(t))return;const s=e[t],n=i[t];o(s)&&o(n)?b(s,n):Object.prototype.hasOwnProperty.call(e,t)||(e[t]=g(n))}const y={"":t=>t,x:t=>t.x,y:t=>t.y};function v(t){const e=t.split("."),i=[];let s="";for(const t of e)s+=t,s.endsWith("\\")?s=s.slice(0,-1)+".":(i.push(s),s="");return i}function M(t,e){const i=y[e]||(y[e]=function(t){const e=v(t);return t=>{for(const i of e){if(""===i)break;t=t&&t[i]}return t}}(e));return i(t)}function w(t){return t.charAt(0).toUpperCase()+t.slice(1)}const k=t=>void 0!==t,S=t=>"function"==typeof t,P=(t,e)=>{if(t.size!==e.size)return!1;for(const i of t)if(!e.has(i))return!1;return!0};function D(t){return"mouseup"===t.type||"click"===t.type||"contextmenu"===t.type}const C=Math.PI,O=2*C,A=O+C,T=Number.POSITIVE_INFINITY,L=C/180,E=C/2,R=C/4,I=2*C/3,z=Math.log10,F=Math.sign;function V(t,e,i){return Math.abs(t-e)<i}function B(t){const e=Math.round(t);t=V(t,e,t/1e3)?e:t;const i=Math.pow(10,Math.floor(z(t))),s=t/i;return(s<=1?1:s<=2?2:s<=5?5:10)*i}function W(t){const e=[],i=Math.sqrt(t);let s;for(s=1;s<i;s++)t%s==0&&(e.push(s),e.push(t/s));return i===(0|i)&&e.push(i),e.sort(((t,e)=>t-e)).pop(),e}function N(t){return!isNaN(parseFloat(t))&&isFinite(t)}function H(t,e){const i=Math.round(t);return i-e<=t&&i+e>=t}function j(t,e,i){let s,n,o;for(s=0,n=t.length;s<n;s++)o=t[s][i],isNaN(o)||(e.min=Math.min(e.min,o),e.max=Math.max(e.max,o))}function $(t){return t*(C/180)}function Y(t){return t*(180/C)}function U(t){if(!a(t))return;let e=1,i=0;for(;Math.round(t*e)/e!==t;)e*=10,i++;return i}function X(t,e){const i=e.x-t.x,s=e.y-t.y,n=Math.sqrt(i*i+s*s);let o=Math.atan2(s,i);return o<-.5*C&&(o+=O),{angle:o,distance:n}}function q(t,e){return Math.sqrt(Math.pow(e.x-t.x,2)+Math.pow(e.y-t.y,2))}function K(t,e){return(t-e+A)%O-C}function G(t){return(t%O+O)%O}function Z(t,e,i,s){const n=G(t),o=G(e),a=G(i),r=G(o-n),l=G(a-n),h=G(n-o),c=G(n-a);return n===o||n===a||s&&o===a||r>l&&h<c}function J(t,e,i){return Math.max(e,Math.min(i,t))}function Q(t){return J(t,-32768,32767)}function tt(t,e,i,s=1e-6){return t>=Math.min(e,i)-s&&t<=Math.max(e,i)+s}function et(t,e,i){i=i||(i=>t[i]<e);let s,n=t.length-1,o=0;for(;n-o>1;)s=o+n>>1,i(s)?o=s:n=s;return{lo:o,hi:n}}const it=(t,e,i,s)=>et(t,i,s?s=>{const n=t[s][e];return n<i||n===i&&t[s+1][e]===i}:s=>t[s][e]<i),st=(t,e,i)=>et(t,i,(s=>t[s][e]>=i));function nt(t,e,i){let s=0,n=t.length;for(;s<n&&t[s]<e;)s++;for(;n>s&&t[n-1]>i;)n--;return s>0||n<t.length?t.slice(s,n):t}const ot=["push","pop","shift","splice","unshift"];function at(t,e){t._chartjs?t._chartjs.listeners.push(e):(Object.defineProperty(t,"_chartjs",{configurable:!0,enumerable:!1,value:{listeners:[e]}}),ot.forEach((e=>{const i="_onData"+w(e),s=t[e];Object.defineProperty(t,e,{configurable:!0,enumerable:!1,value(...e){const n=s.apply(this,e);return t._chartjs.listeners.forEach((t=>{"function"==typeof t[i]&&t[i](...e)})),n}})})))}function rt(t,e){const i=t._chartjs;if(!i)return;const s=i.listeners,n=s.indexOf(e);-1!==n&&s.splice(n,1),s.length>0||(ot.forEach((e=>{delete t[e]})),delete t._chartjs)}function lt(t){const e=new Set(t);return e.size===t.length?t:Array.from(e)}const ht="undefined"==typeof window?function(t){return t()}:window.requestAnimationFrame;function ct(t,e){let i=[],s=!1;return function(...n){i=n,s||(s=!0,ht.call(window,(()=>{s=!1,t.apply(e,i)})))}}function dt(t,e){let i;return function(...s){return e?(clearTimeout(i),i=setTimeout(t,e,s)):t.apply(this,s),e}}const ut=t=>"start"===t?"left":"end"===t?"right":"center",ft=(t,e,i)=>"start"===t?e:"end"===t?i:(e+i)/2,gt=(t,e,i,s)=>t===(s?"left":"right")?i:"center"===t?(e+i)/2:e;function pt(t,e,i){const s=e.length;let n=0,o=s;if(t._sorted){const{iScale:a,_parsed:r}=t,l=a.axis,{min:h,max:c,minDefined:d,maxDefined:u}=a.getUserBounds();d&&(n=J(Math.min(it(r,l,h).lo,i?s:it(e,l,a.getPixelForValue(h)).lo),0,s-1)),o=u?J(Math.max(it(r,a.axis,c,!0).hi+1,i?0:it(e,l,a.getPixelForValue(c),!0).hi+1),n,s)-n:s-n}return{start:n,count:o}}function mt(t){const{xScale:e,yScale:i,_scaleRanges:s}=t,n={xmin:e.min,xmax:e.max,ymin:i.min,ymax:i.max};if(!s)return t._scaleRanges=n,!0;const o=s.xmin!==e.min||s.xmax!==e.max||s.ymin!==i.min||s.ymax!==i.max;return Object.assign(s,n),o}class xt{constructor(){this._request=null,this._charts=new Map,this._running=!1,this._lastDate=void 0}_notify(t,e,i,s){const n=e.listeners[s],o=e.duration;n.forEach((s=>s({chart:t,initial:e.initial,numSteps:o,currentStep:Math.min(i-e.start,o)})))}_refresh(){this._request||(this._running=!0,this._request=ht.call(window,(()=>{this._update(),this._request=null,this._running&&this._refresh()})))}_update(t=Date.now()){let e=0;this._charts.forEach(((i,s)=>{if(!i.running||!i.items.length)return;const n=i.items;let o,a=n.length-1,r=!1;for(;a>=0;--a)o=n[a],o._active?(o._total>i.duration&&(i.duration=o._total),o.tick(t),r=!0):(n[a]=n[n.length-1],n.pop());r&&(s.draw(),this._notify(s,i,t,"progress")),n.length||(i.running=!1,this._notify(s,i,t,"complete"),i.initial=!1),e+=n.length})),this._lastDate=t,0===e&&(this._running=!1)}_getAnims(t){const e=this._charts;let i=e.get(t);return i||(i={running:!1,initial:!0,items:[],listeners:{complete:[],progress:[]}},e.set(t,i)),i}listen(t,e,i){this._getAnims(t).listeners[e].push(i)}add(t,e){e&&e.length&&this._getAnims(t).items.push(...e)}has(t){return this._getAnims(t).items.length>0}start(t){const e=this._charts.get(t);e&&(e.running=!0,e.start=Date.now(),e.duration=e.items.reduce(((t,e)=>Math.max(t,e._duration)),0),this._refresh())}running(t){if(!this._running)return!1;const e=this._charts.get(t);return!!(e&&e.running&&e.items.length)}stop(t){const e=this._charts.get(t);if(!e||!e.items.length)return;const i=e.items;let s=i.length-1;for(;s>=0;--s)i[s].cancel();e.items=[],this._notify(t,e,Date.now(),"complete")}remove(t){return this._charts.delete(t)}}var bt=new xt;function _t(t){const e=t=>Math.round(t)*t,i=function(t){return(t+.5)|0},s=i,n=(t,e)=>Math.max(Math.min(t,e),0);function o(t){return n(i(t*2.55),255)}function a(t){return n(i(t*255),255)}function r(t){return n(i(t/2.55/100),1)}function l(t){return n(i(t*100),100)}return{0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,A:10,B:11,C:12,D:13,E:14,F:15,a:10,b:11,c:12,d:13,e:14,f:15}[t]}function yt(t){return"#"+[_t(t.r>>4),_t(t.r),_t(t.g>>4),_t(t.g),_t(t.b>>4),_t(t.b),(_t(t.a),_t(t.a/16)>>4),_t(t.a)].join("")}function vt(){let t=!1;return()=>{t||(t=!0,console.warn("Color library not found, used a simple parsing algorithm to interpret chart colors."))}}{color:yt}}function Mt(t){var e,i,s,n,o,a,r={r:0,g:0,b:0,a:255};try{if((e=t.match(/^#[\da-f]{3}$/i))&&(e=e[0].substring(1),(i=parseInt(e[0]+e[0],16),s=parseInt(e[1]+e[1],16),n=parseInt(e[2]+e[2],16)),r={r:i,g:s,b:n,a:255}),(e=t.match(/^#[\da-f]{4}$/i))&&(e=e[0].substring(1),i=parseInt(e[0]+e[0],16),s=parseInt(e[1]+e[1],16),n=parseInt(e[2]+e[2],16),o=parseInt(e[3]+e[3],16)),r={r:i,g:s,b:n,a:o}),(e=t.match(/^#[\da-f]{6}$/i))&&(e=e[0].substring(1),i=parseInt(e.substring(0,2),16),s=parseInt(e.substring(2,4),16),n=parseInt(e.substring(4,6),16)),r={r:i,g:s,b:n,a:255}),(e=t.match(/^#[\da-f]{8}$/i))&&(e=e[0].substring(1),i=parseInt(e.substring(0,2),16),s=parseInt(e.substring(2,4),16),n=parseInt(e.substring(4,6),16),o=parseInt(e.substring(6,8),16)),r={r:i,g:s,b:n,a:o}),r.r+r.g+r.b===0&&255===r.a)throw new Error("Invalid color: "+t);return r}catch(e){return vt()(),null}}function wt(t,e,i){const s=e.x-t.x,n=e.y-t.y,o=Math.sqrt(s*s+n*n);let a=Math.atan2(n,s);return a<-.5*C&&(a+=O),{angle:a,distance:o}}const kt=["light","dark"],St={};function Pt(t){return void 0!==t._chartjs&&void 0!==t._chartjs.listeners}class Dt{constructor(t){if(void 0===window.getComputedStyle)return void console.warn("getComputedStyle not available in this environment");const e=window.getComputedStyle(t),i=e.getPropertyValue("background-color");let s=Mt(i);if(!s)try{s=Mt(e.getPropertyValue("color"))}catch(t){s=null}this.valid=null!==s,Object.assign(this,s||{})}}function Ct(t){const e={};for(const i of t)"alpha"===i||"hsl"===i||"hsv"===i||"hwb"===i||"oklch"===i||"oklab"===i||"rgb"===i||"xyz"===i||(e[i]=t[i]);return e}const Ot={...{rgb:["red","green","blue"],rgba:["red","green","blue","alpha"]}},At={...{hsl:["hue","saturation","lightness"],hsla:["hue","saturation","lightness","alpha"]}};function Tt(t,e){const i=Ct(t);return void 0!==i[e]&&i[e]}function Lt(t,e){return"..."!==t[e]&&void 0!==t[e]}function Et(t){return t.toLowerCase().replace(/\s/g,"")}function Rt(t){for(const e of kt)if(St[e]=(St[e]||Ot[e]).reduce(((e,i)=>{const s=Tt(t,i);return void 0!==s&&(e[i]=s),e}),{}),Object.keys(St[e]).length>0)return e;return null}class It{constructor(t){Object.assign(this,t)}set(t,e){return Object.assign(this,{[Et(t)]:e}),this}get(t){return this[Et(t)]}alpha(t=1){return void 0===t?this.a:this.set("alpha",J(t,0,1))}saturate(t=0){return this.set("saturation",this.s+this.s*t)}desaturate(t=0){return this.saturate(-t)}lighten(t=0){return this.set("lightness",this.l+this.l*t)}darken(t=0){return this.lighten(-t)}mix(t,e=0.5){return new It({h:.5*(this.h+t.h),s:.5*(this.s+t.s),l:(1-e)*this.l+e*t.l})}clone(){return new It(Ct(this))}}class zt{constructor(t){Object.assign(this,t)}set(t,e){return Object.assign(this,{[Et(t)]:e}),this}get(t){return this[Et(t)]}alpha(t=1){return void 0===t?this.a:this.set("alpha",J(t,0,1))}saturate(t=0){return this.set("saturation",this.s+this.s*t)}desaturate(t=0){return this.saturate(-t)}lighten(t=0){return this.set("lightness",this.l+this.l*t)}darken(t=0){return this.lighten(-t)}mix(t,e=0.5){return new zt({h:.5*(this.h+t.h),s:.5*(this.s+t.s),l:(1-e)*this.l+e*t.l})}clone(){return new zt(Ct(this))}}function Ft(t){return t instanceof It}function Vt(t){return t instanceof zt}function Bt(t){const e={};for(const i of["r","g","b","a"])e[i]=J(t[i],0,255);return e}class Wt{constructor(t,e){const i=i=>{const s=new Dt(i).valid;return s&&new Wt(i)};if(void 0===t?i:i instanceof Wt?Wt.clone(t):function(t,e){let i,s;return Ot[s=Et(t)]||At[s]?new Wt(...Ot[s]||At[s].map((e=>t[e]))):void console.warn("invalid color:",t)}(t)))return;if(void 0!==t)if("object"==typeof t){if(void 0!==e)this.setValues("rgb",t,e);else if(Ft(t)||Vt(t))this.setValues("hsl",t);else if("r"in t)this.setValues("rgb",t);else if("l"in t)this.setValues("hsl",t);else if("h"in t){const e=Rt(t);e&&this.setValues(e,t)}}else if("string"==typeof t&&(i=function(t){const e=t.trim().toLowerCase();if("transparent"===e)return{r:0,g:0,b:0,a:0};let i=Mt(e);return i||(i={r:0,g:0,b:0},console.warn("invalid color:",t)),i}(t))){this.setValues("rgb",i)}else{this.r=t,this.g=e,this.b=arguments[2],void 0===arguments[3]&&(this.a=255)}}clone(){return new Wt(Bt(this))}saturate(){return this.set("saturation",this.s+10)}desaturate(){return this.set("saturation",this.s-10)}lighten(){return this.set("lightness",this.l+10)}darken(){return this.set("lightness",this.l-10)}rotate(t=0){let e=Rt(this);return"hsl"===e?this.set("hue",this.h+t):"hsv"===e&&this.set("hue",this.h+t),this}mix(t,e=0.5){const i=this.clone(),s=i.set("alpha",J(J(this.a,0,255)/255*((1-e)+e*J(t.a,0,255)/255),0,1));return s}mix2(t,e=0.5){const i=1-e,s=new Wt([J(i*this.r+e*t.r,0,255),J(i*this.g+e*t.g,0,255),J(i*this.b+e*t.b,0,255),J(i*this.a+e*t.a,0,255)]);return s}hex(){return Bt(this)}_rgb(t){return this}setValues(t,e,i){const s=Ot[t];s[3]&&Lt(e,s[3])&&(this.a=a(e[s[3]])),void 0===i&&(i=e);const n=Tt(i,s[0]),o=Tt(i,s[1]),a=Tt(i,s[2]);void 0===n||void 0===o||void 0===a||console.warn("invalid color:",t,e);const r={r:o(n),g:o(a),b:o(r)};return Object.assign(this,r),this}getValues(t){for(const e of kt){const i={};for(const s of Ot[t])i[s]=Tt(this,s);if(Object.keys(i).length===Ot[t].length)return i}return null}}class Nt{constructor(t){this.valid=!1,this.values={rgb:[0,0,0],hsv:[0,0,0]},this.spaces={},this.cmykRatio=0,void 0!==t&&(this.input=t,this.rgb=t,this.hsv=function(t){const e=t[0]/255,i=t[1]/255,s=t[2]/255,n=Math.max(e,i,s),o=Math.min(e,i,s),a=n-o,r=n,l=0===n?0:a/n;let h;return h=0===a?0:n===e?(i-s)/a+(i<s?6:0):n===i?(s-e)/a+2:(e-i)/a+4,h/=6,[Math.round(h*360),Math.round(100*l),Math.round(100*r)]}(t))}get rgb(){return this.values.rgb}set rgb(t){this.values.rgb=t,this.valid=3===t.length,this.spaces.rgb=!0}get hsv(){return this.values.hsv}set hsv(t){this.values.hsv=t,this.valid=3===t.length}get hsl(){return this.values.hsl||(this.values.hsl=function(t){const e=t[0]/255,i=t[1]/255,s=t[2]/255,n=Math.max(e,i,s),o=Math.min(e,i,s),a=(n+o)/2;let r,l;if(n===o)r=l=0;else{const t=n-o;switch(l=a>.5?t/(2-n-o):t/(n+o),n){case e:r=((i-s)/t+(i<s?6:0))/6;break;case i:r=((s-e)/t+2)/6;break;case s:r=((e-i)/t+4)/6}}return[Math.round(360*r),Math.round(100*l),Math.round(100*a)]}(t)),this.values.hsl}set hsl(t){this.values.hsl=t}to(t){return"hsl"===t?this.hsl:"rgb"===t?this.rgb:void console.warn("unknown mode "+t)}}class Ht{constructor(t){if(void 0===t.size)throw new Error("legend.labels.generateLabels must return an array of items with a size property");const e=t.size;let i=0;for(const s of t){if(void 0!==s.labelWidth)return;i=Math.max(i,s.text.length)}return t.forEach((t=>t.labelWidth=i*e*.55)),t}}}class jt{constructor(t){void 0===t.textAlign&&(t.textAlign="center"),this.options=t}configure(t){this.options=Object.assign(this.options,t)}measureText(t,e,i){const s=this.options;return s.font&&(e.font=s.font),e.measureText(t).width}textSize(t,e){const i={height:e*1.2,width:0};return i.width=t.reduce(((t,e)=>Math.max(t,this.measureText(e,this.ctx,this.options))),0),i}parseFont(t){return{family:this.options.family||t.family,lineHeight:this.parseLineHeight(t),size:this.parseSize(t),style:this.parseStyle(t),variant:this.parseVariant(t),weight:this.parseWeight(t)}}parseSize(t){let e=this.options.size||t.size;return"string"==typeof e&&(e=parseInt(e,10)),e}parseStyle(t){return this.options.style||t.style}parseVariant(t){return this.options.variant||t.variant}parseWeight(t){return this.options.weight||t.weight}parseLineHeight(t){return this.options.lineHeight||t.lineHeight}}class $t{constructor(){this._cache={},this._context=void 0}set context(t){this._context!==t&&(this._cache=new Map,this._context=t)}get font(t){const e=this._context.el.getContext("2d");return e.font}measureText(t,e){let i=this._cache.get(t);return void 0===i&&(i=this._context.measureText(t),this._cache.set(t,i)),i}textSize(t,e){const i={height:e*1.2,width:0};return i.width=this._cache.get(t)?.width||0,i}textBoxWidth(t,e){return Math.max(...t.split("\\n").map((t=>this.measureText(t,e).width)))}textBoxHeight(t){const e=t.split("\\n").length;return e*1.2}parseFont(t){return Object.assign({family:t.family,lineHeight:t.lineHeight,size:t.size,style:t.style,variant:t.variant,weight:t.weight},{text:"",bold:!1})}parseSize(t){return t.size}parseStyle(t){return t.style}parseVariant(t){return t.variant}parseWeight(t){return t.weight}parseLineHeight(t){return t.lineHeight}}class Yt{constructor(t){this.options=t||{}}isVisible(){return this.options.display}toJSON(){return g(this.options)}}class Ut{constructor(t){this.options=t||{},this.datas={labels:[],datasets:[]},this.ctx=void 0,this.canvas=void 0}set context(t){this.ctx=t}get height(){return 0}get width(){return 0}get canvas(){return this.canvas||{}}set canvas(t){this.canvas=t}isIndexable(t){return!0}isVisible(){return!0}getLabels(){return this.datas.labels}getLabelForIndex(t){return this.datas.labels[t]}getDatasets(){return this.datas.datasets}getDataset(t){return this.datas.datasets[t]}getDatasetMeta(t){return this.datas.datasets[t]}getOptions(){return this.options}setOptions(t){this.options=x(this.options,t)}update(t,e,i){}draw(t){}}class Xt{constructor(t){this.index=t}isVisible(){return!0}draw(t){return!0}}const qt=[],Kt=[];function Gt(t){const e=qt.indexOf(t);e>-1&&qt.splice(e,1)}function Zt(t,e){let i=qt.indexOf(t);-1===i&&qt.push(t),qt[0]._cres=e._cres,qt[0]._ctx=e._ctx}function Jt(t){qt.push(t)}function Qt(t,e){const i=qt.indexOf(t);if(i>-1){const s=qt[i];qt[i]=qt[qt.length-1],qt.pop(),s._listeners&&(delete s._listeners[e.type],Object.keys(s._listeners).length>0||(delete s._listeners,Gt(s)))}}function te(t){qt.forEach((e=>{e._listeners&&e._listeners[t.type]&&e._listeners[t.type](t)}))}function ee(){return qt}function ie(t,e){const i=qt.find((t=>t._ctx===e));if(!i)return;const s=i._listeners;if(!s)return;const n=s[t];n&&(n.once&&delete s[t],n(e))}function se(t,e){const i=qt.find((t=>t._ctx===e));i&&(i._listeners=i._listeners||{},i._listeners[t]=!0)}const ne=Symbol("ChartContext");function oe(t){return t[ne]}const ae={};function re(t){const e=[];for(const i in t)Object.prototype.hasOwnProperty.call(t,i)&&e.push(t[i]);return e}const le="4.4.4";class he{constructor(t,e){const i=this;this.config=e,this.options=e.options,this._parsing=!1,this._data=void 0,this._objectData=!1,this._animated=!1,this._animationsDisabled=!1,this._durationsDisabled=!1,this._chartInstance=void 0,this._context=void 0,Object.defineProperty(this,"data",{get(){return i._data},set(t){i.data=t}}),Object.defineProperty(this,"indexAxis",{get(){const t=(i._axis=i.options.indexAxis||i._axis||"x");return t},configurable:!0}),Object.defineProperty(this,"axis",{get(){return this.indexAxis}}),this.bind(t)}_onDataPush(...t){this._data.datasets.push(...t),this.notifyPlugins("_onDataPush",{index:this._data.datasets.length-t.length,count:t.length})}_onDataPop(){this._data.datasets.pop(),this.notifyPlugins("_onDataPop",{index:this._data.datasets.length})}_onDataShift(){this._data.datasets.shift(),this.notifyPlugins("_onDataShift",{index:0})}_onDataUnshift(...t){this._data.datasets.unshift(...t),this.notifyPlugins("_onDataUnshift",{index:0,count:t.length})}_onDataSplice(t,e,...i){const s=this._data.datasets.splice(t,e,...i);this.notifyPlugins("_onDataSplice",{index:t,deleteCount:e,items:i})}_onDataSet(t){this._data.datasets[t]=this._data.datasets[t],this.notifyPlugins("_onDataSet",{index:t})}addData(t,...e){o(t)?Object.assign(this,{data:x(this.data,t)}):this._data.datasets.forEach(((t,i)=>{t.data.push(...e)}))}removeData(t){this._data.labels.splice(t,1),this._data.datasets.forEach((e=>{e.data.splice(t,1)}))}getData(){return this._data}getDataset(t){return this.data.datasets[t]}getDatasetMeta(t){return this.getMeta(t)}getMeta(t){const e=this._data.datasets[t];if(!e)throw new Error("No dataset found at index "+t);let i=this._metadata.get(e);return i||(i={},this._metadata.set(e,i)),i}getVisibleDatasetCount(){return this._data.datasets.reduce(((t,e,i)=>this._chartInstance._isVisible(i)?t+1:t),0)}isDatasetVisible(t){const e=this.getDatasetMeta(t);return"hidden"!==e.hidden}setDatasetVisibility(t,e){const i=this.getDatasetMeta(t);i.hidden=!e}toggleDataVisibility(t){this.setDatasetVisibility(t,this.isDatasetVisible(t))}getStyle(t){return this.getDatasetMeta(t).hidden=!1,this.config.style}notifyPlugins(t,e,i){return this._chartInstance&&this._chartInstance.notifyPlugins(t,e,i)}bind(t){if(this._chartInstance=t,this._data=this.config.data||{labels:[],datasets:[]},this._data.datasets=this._data.datasets||[],this._data.labels=this._data.labels||[],this._metadata=new WeakMap,this._parsing=!1,this.mode=void 0,this.options=x({},le.defaults,this.options),!this.options.parsing){let e=!0;this._data.datasets.forEach((t=>{!t.data||"object"!=typeof t.data[0]&&(e=!1)})),(this._parsing=e||this.options.parsing)&&this._data.datasets.forEach(((t,e)=>{this.getParsed(e)}))}}_parse(){}destroy(){this._metadata.clear()}}const ce={},de={boolean:!1,number:0,string:""},ue={},fe=t=>void 0===t?1:t;function ge(t,e,i){const s=M(t,e);return void 0===s?i:s}function pe(t,e,i){if(!o(i))return ge(t,e,i);let s=ge(t,e,{});return o(i)&&o(s)&&x(s,i),s}function me(t){return t.split(".").reduce(((t,e)=>(t[e]={})[e],t))}function xe(t){return t[t.length-1]}const be=t=>Number.isFinite(t),_e=t=>o(t)&&Object.keys(t).reduce(((t,e)=>t&&be(e)?be(e):t),!0);let ye=0;function ve(t){t.configure=function(t){if(!o(t))return;x(this,t);const e=re(t);e.forEach((e=>{delete this[e]}))},t.fromString=function(t){return new this(t)},t.isResolvedOptions=function(t){return t&&!0===t._resolved},t.setOptionScopes=function(t){this._scopes=t},t.registerDefaults=function(t){this._defaults=x(this._defaults,t)}}}function Me(t){if(void 0!==t._resolved)return t;const e=x({},t),i=re(t);for(const s of i)e[s]=t[s];return Object.defineProperty(e,"_resolved",{value:!0}),e}class we extends Yt{constructor(t){super(t),this._resolved=!1}clone(){return new we(g(this.options))}}function ke(t,e,i,s){let n,o,a,r=!1;for(i=ge(i,void 0,[]),s=ge(s,void 0,{}),o=0;o<i.length;o++)if(n=ge(t,i[o],void 0),void 0===n)break;void 0===n&&(n=e);const l=n.split(".");for(o=0;o<l.length;o++)a=ge(s,l[o],void 0),void 0===a&&(a=[],s[l[o]]=a),s=a;return s}function Se(t,e,i){const s=ge(t,e);if(o(s))return x({},s);if(!a(s))return s;let n=i[s];return void 0===n&&(n=s),n}function Pe(t,e,i){const s=v(e),n=t=>s.reduce(((e,i)=>e&&e[i]),t),o=n(t);return void 0===o?i:o}function De(t,e,i){for(const s of e.scopes){const e=Pe(i,s+"."+t);if(void 0!==e)return e}return Pe(i,t)}let Ce=0;class Oe extends we{constructor(t,e){super(t),this._chartInstance=e,this._action=[],this._context=void 0,this._resolvers=re(t)}resolveNamespace(t){const e=this._resolvers;for(const i of e)if(i.indexOf(t)>-1)return i;return""}resolveSubOptions(t,e){const i=[];return e.forEach((e=>{const s=this.resolveNamespace(e),n=this._resolvers.indexOf(s);n>-1&&i.push(ge(this.options,s,{}))})),i}getRootOptions(t){return this.options[t]||{}}getOptionScopes(t,e){const i={if:t=>!!ge(this.options,t)},s=[];return this.getOptionScopes(t,e).forEach((t=>{i[t]&&!s.includes(t)&&s.push(t)})),s}}ve(we),ve(Oe);const Ae=(t,e,i)=>t>e?1:t<e?-1:0;function Te(t){const e=Object.keys(t);let i,s,n,o;for(i=0,s=e.length;i<s;i++)for(n=e[i],o=i+1;o<s;o++)if(Ae(t[n],t[e[o]])===Ae(n,e[o]))return!1;return!0}function Le(t){let e=0;for(const i in t)Object.prototype.hasOwnProperty.call(t,i)&&e++;return e}class Ee extends Ut{constructor(t,e){super(t),this.axis="y",this.starting=void 0,this.ending=void 0,this.options=e.options,this._range={min:void 0,max:void 0}}setUserBounds(t){this.options.min=t.min,this.options.max=t.max}getUserBounds(){const t={min:void 0,max:void 0,minDefined:void 0,maxDefined:void 0,range:void 0};return void 0!==this.options.min&&(t.min=t.minDefined=Se(this.options,"min")),void 0!==this.options.max&&(t.max=t.maxDefined=Se(this.options,"max")),t}buildTicks(){return[]}buildLabelString(t){return t}}class Re extends Ee{constructor(t,e){super(t,e),this.type=e.type,this.position=e.position,this._gridLineItems=null,this._labelItems=null}isVisible(){return this.options.display}getLabelForIndex(t){return this.getLabelForValue(void 0)}getLabelForValue(t){return l(t,void 0)}getPixelForValue(t){return NaN}getValueForPixel(t){return void 0}getPixelForDecimal(t){return NaN}getDecimalForPixel(t){return NaN}getBasePixel(){return NaN}getBaseValue(){return NaN}getMaxLabelWidth(t){return 0}getLabelWidth(t){return 0}fits(t){const e=this.options.ticks;return!((e.mirror||"top"!==this.position&&"left"!==this.position)&&(this.isVisible()?this.getMaxLabelWidth(t):0)>t)}isFullSize(){return this.options.fullSize}isFullWidth(){return"x"===this.axis}lineBoxContainsBoundingBox(t,e={}){return!0}paddingTop=0;paddingBottom=0;paddingLeft=0;paddingRight=0}}class Ie extends Re{constructor(t,e){super(t,e),this._startValue=void 0,this._valueRange=0}getRightValue(t){if(s(t))return NaN;if("number"==typeof t&&isFinite(t))return t;if(o(t)){if(n(t))return isFinite(t.length)?t[t.length-1]:NaN;const e=+t;return isFinite(e)?e:t.valueOf()}return NaN}parseObjectData(t,e,i,s){const{xAxisID:a="x",yAxisID:r="y"}=t;return u(e,(e,n)=>{const o=e[i];e[s]=[ge(o,a),ge(o,r)]}),e}isNumberContext(){return"number"==typeof this.min&&"number"==typeof this.max}isCategoryContext(){return"category"===this.type}isOrdinalContext(){return!0}isLinear(){return!1}isLogarithmic(){return!1}isTime(){return!1}isMissing(t){return s(t)}isSeparatedScale(){return!1}isFullSize(){return super.isFullSize()&&"category"===this.type}helpString(){return""}}class ze extends Ie{constructor(t,e){super(t,e),this.type="category",this._lastClip=void 0,this._valueOffsets=void 0,this._gridLinePositions=[],this._startValue=0,this.min=void 0,this.max=void 0}setDimensions(){this.width&&!this.options.offset||(this._valueOffsets=void 0)}parse(t,e){if(!a(t))return NaN;const i=this._labels;let s=g(i,t);return void 0===s&&(s=i.length,i.push(t)),s}determineDataLimits(){const{minDefined:t,maxDefined:e}=this.getUserBounds();let i=this.getOption("bounds");const s=this.getOption("ticks.min"),n=this.getOption("ticks.max");let o=this._labels.length;i="labels"===i?0:i="data"===i?this.getDataLimits():0,t||(this.min=s||i),e||(this.max=n||o-1)}_getLabelSizes(){let t,e;const i=[];for(t=0;t<this._labels.length;t++)if(e=this._getLabelSize(this._labels[t]),i.push(e),this.maxWidth<e.width){this.maxWidth=e.width}return i}_calculateLabelRotation(){}_getLabelSize(t){return{width:0,height:0}}getOption(t){return ge(this.options,t)}}function Fe(t){return t}class Ve extends Ie{constructor(t,e){super(t,e),this.type=e.type,this.options={...this.options},this.tick={fontColor:this.options.ticks.fontColor,font:{weight:600}},this._table=[],this._tableSet=!1,this._timestamps=[],this.min=void 0,this.max=void 0,this._startValue=void 0}setDimensions(){this.width=this.maxWidth,this.height=10}parse(t,e){return NaN}isUserDefined(){return!0}isCategoryContext(){return!1}isOrdinalContext(){return!1}isLinear(){return!0}isLogarithmic(){return!1}isTime(){return!1}helpString(){return""}}class Be extends Ve{constructor(t,e){super(t,e),this.type="linear",this._startValue=0}determineDataLimits(){const{min:t,max:e,minDefined:i,maxDefined:s}=this.getUserBounds();let n=0,o=1;if(i&&s)n=t,o=e;else{const t=this.getDataLimits();n=i?t.min:t.min,o=s?t.max:t.max}this.min=n,this.max=o}computeUserFriendlyTicks(t){const e=this.getTickStep(this.min,this.max,this.getTicks()),i=this.getTickStepDecimals(e);return this.generateTicks(this.min,this.max,this.getTicks(),i)}getTickStep(t,e,i){return B((e-t)/Math.max(i-1,1))}getTickStepDecimals(t){return Math.max(-Math.floor(Math.log10(t)),0)}generateTicks(t,e,i,s){let n=[];for(let o=0;o<i;o++)n.push({value:t+o*s});return n}buildTicks(){return this.computeUserFriendlyTicks()}}class We extends Be{constructor(t,e){super(t,e),this.type="logarithmic",this._startValue=0}determineDataLimits(){const{min:t,max:e}=this.getUserBounds();this.min=t||1,this.max=e||10}computeUserFriendlyTicks(t){const e=this.getLogs(this.min,this.max),i=[];for(let s=0;s<e.length;s++)i.push({value:e[s]});return i}getLogs(t,e){const i=Math.floor(z(t)),s=Math.ceil(z(e)),n=[];for(let o=i;o<=s;o++){const t=Math.pow(10,o);for(let e=1;e<10;e++){const i=t*e;if(!(i<t||i>1e15)&&!(i<e)){if(i>=t*1&&i<=e*1){}}n.push(i)}}return n.filter((t=>t>=this.min&&t<=this.max))}}class Ne extends Re{constructor(t,e){super(t,e),this.type="time",this.position=e.position}getLabelForIndex(t){return this.getLabelForValue(this.getValueForPixel(t))}}const He=new Map,je=new Map;function $e(t){let e=He.get(t);return e||(e={id:i(),listeners:[]},He.set(t,e)),e}function Ye(t,e,i){let s=je.get(t);s||(s=new Map,je.set(t,s)),s.set(e,i)}function Ue(t,e){return je.get(t)?.get(e)}const Xe={},qe={};function Ke(t){if(t in Xe)return Xe[t];const e={};return Xe[t]=e,e}function Ge(t,e){if(t in Ke(e))return Ke(e)[t];let i=t;return Ke(e)[i]=i,i}const Ze=t=>"#"+[Ge((255&t).toString(16),"r"),Ge(((t>>8)&255).toString(16),"g"),Ge(((t>>16)&255).toString(16),"b")].join("");class Je{constructor(t){this.values=t}isVisible(){return this.values.visible}toggleVisibility(){this.values.visible=!this.values.visible}getColors(t){return g(this.values.colors[t]||{})}setColors(t){this.values.colors={...this.values.colors,[t]:{...this.values.colors[t]}}}}class Qe{constructor(t){const e=this;this._datasets=[],this._metasets=[],this._sorting=!1,this._sortingDates=!1,this._mode=void 0,this._horizontal=void 0,this.options=t.options,this.tables=new Map,this.charts=new Map,this.cacheId=i(),this._listeners={},Object.defineProperty(this,"hidden",{value:[]}),at(this.hidden,this)}getMeta(t){const e=this._metasets[t];return e||(this._metasets[t]={}),e}getDataset(t){return this._datasets[t]}getDatasetCount(){return this._datasets.length}getMaxId(){let t=0;return this._datasets.forEach((e=>{e._id>t&&(t=e._id)})),t}getVisibleMeta(t){return this._metasets.slice().filter((e=>this._isVisible(t)))}getDatasetVisibility(t){const e=this.getDataset(t);return!e||!e.hidden}setDatasetVisibility(t,e){const i=this.getDataset(t);i&&(i.hidden=!e)}toggleDataVisibility(t){this.setDatasetVisibility(t,!this.getDatasetVisibility(t))}_isVisible(t){const e=this.getDataset(t),i=this.getMeta(t);return!e||!i||e.hidden===!0||i.hidden===!0}hasValue(t,e){return void 0!==this.getDataset(t)?.data[e]}update(t){if(!this._datasets||0===this._datasets.length)return;this._sort(),this._computeDatasetIndexScale(),this._computeBoundingBox()}_sort(){this._datasets.length&&(this._sorting=!0)}_computeDatasetIndexScale(){}_computeBoundingBox(){}addDataset(t){this._datasets.push(t)}removeDataset(t){this._datasets.splice(t,1)}}class te{constructor(t,e){this.el=t,this.ctx=t.getContext("2d"),this._listeners=new Map,this._tooltipCallbackId=void 0,this.uid=w(Object.getOwnPropertyNames(Qe.prototype).join(",")),this.options=e.options,this.width=t.width,this.height=t.height,this.aspectRatio=this.width/this.height,this._eventHandler=this._onEvent.bind(this),this._wheelHandler=this._onWheelEvent.bind(this),this._lastEvent=void 0,this._lastTooltipEvent=void 0,this._handlers={},this._locals=[],this._options=new Map}set data(t){this.config.data=t}get data(){return this.config.data}draw(){this._updateAnimations()}isVisible(){return this.canvas?.offsetParent}watchProperties(){ot.forEach((e=>{Object.defineProperty(this.data.datasets,e,{...)}}))}_onDataPush(...t){this.data.datasets.splice(this.data.datasets.length,0,...t)}_onEvent(t){}_onWheelEvent(t){}_onWindowResize(){this.resize()}_onDragStart(t){this._lastEvent=t}_onDragMove(t){}_onDragEnd(){}_onClickEvent(t){this.notifyPlugins("onClick",{native:t,x:t.offsetX,y:t.offsetY})}_attachEvents(){}_detachEvents(){}updateHoverStyle(){}_updateAnimations(){this._animationsDisabled||bt.running(this)}draw(){}}const ee={...ye};const ie=t=>e=>t/e;const se=(t,e)=>"string"==typeof t&&0===t.indexOf(e)?t.slice((e+"(").length,-1):"";class ne extends Ee{constructor(t,e){super(t,e),this.type="category",this._startValue=0}setDimensions(){this.width=this.maxWidth,this.height=10}determineDataLimits(){const{minDefined:t,maxDefined:e}=this.getUserBounds();let i=this.min||0,s=this.max||this.getLabels().length-1;if(t)this.min=ge(this.options.min,void 0,i);else {}}buildTicks(){return[]}getPixelForValue(t){return Math.round((t-this.min)/(this.max-this.min+1)*this.width)}_getLabelSize(t){return{width:0,height:0}}}function oe(t){const e=t.split("("),i=se(t,e[0]);return""===i?"":i}class ae extends Ie{constructor(t,e){super(t,e),this.type=e.type,this.options={...this.options},this._range={min:void 0,max:void 0},this._userMin=void 0,this._userMax=void 0,this.min=void 0,this.max=void 0,this._tokenizer=new $t,this.sampleSize=100}setDimensions(){this.width=this.maxWidth,this.height=10}parse(t,e){if(s(t))return NaN;if("object"==typeof t)return t;if("number"==typeof t&&isFinite(t))return t;throw new Error("Invalid value for axis: "+t)}determineDataLimits(){const{min:t,max:e}=this.getUserBounds();this.min=void 0!==t?this.parse(t):void 0,this.max=void 0!==e?this.parse(e):void 0}createBoundaryArray(){const t=this.options.bounds;if("ticks"===t)return this.buildTicks();let e=this.min,i=this.max;const s="data"===t;return this.ticks=[{value:e},{value:i}],s}buildTicks(){return this.options.ticks.stepSize||this.computeTickSpacing(),this.getTicks().map((t=>({value:t})))}_computeTickSpacing(){const t=this.options.ticks,e=this.min,i=this.max;let s=t.stepSize;if(void 0===s){let n=B((i-e)/this.getTicks());t.stepSize=n}return t}computeTickSpacing(){const t=this.options.ticks,e=Math.ceil(this.getTickCount());t.stepSize=Math.max((this.max-this.min)/e,0),t.displayFormats={}}getTicks(){const t=this.options.ticks.stepSize||1;return this.generateTicks(this.min,this.max,t)}generateTicks(t,e,i){const s=[];let n=t;for(;n<=e;n+=i)s.push(n);return s}getPixelForValue(t){return 0}getValueForPixel(t){return 0}getPixelForDecimal(t){return 0}getDecimalForPixel(t){return 0}getBasePixel(){return 0}getBaseValue(){return 0}getLabelForValue(t){return""}}const re=new Map,le=new Map;function he(t,e){let i=re.get(t);i||(i={},re.set(t,i)),i[e]=!0}function ce(t,e){return le.has(t)&&le.get(t).has(e)}function de(t){return ce(t.type,t.id)&&!t.options.parsing}function ue(t){if(de(t))return t._getParsingFunction();if(t.options.data&&("function"==typeof t.options.data.getValues||o(t.options.data.getValues))){const e=new Function("idx","return options.data.getValues(idx)");return e.bind(t)}}function fe(t,e){const i=ue(t);if(i)return e.map(i);switch(t.type){case"bar":case"bubble":return e.map((e=>{const i=e;return void 0!==i.x&&void 0!==i.y?i:{x:e,y:e}}));case"scatter":return e.map((e=>({x:e,y:e})));default:return e}}function ge(t,e,i){if(void 0===e)return i;if(void 0===t)return e;if("function"==typeof t.getContext)return t.getContext().createLinearGradient(...e);return{}}}function pe(t){let e=0;for(const i of t)e+=i;return e/t.length}function me(t,e){let i=0;for(let s=0;s<t.length;s++)i+=e(t[s],s);return i}function xe(t,e){const i=pe(t),s=me(t,(t=>Math.pow(t-i,2)))/t.length;return Math.sqrt(s)}function be(t){let e=0;for(const i of t)e=Math.max(e,Math.abs(i));return e}function _e(t,e){return Math.max(...t.map((t=>Math.abs(t-e))))}function ye(t,e){return t.reduce(((t,i)=>t+e(i)),0)}const ve=Math.sign;function Me(t){const e=[];let i=t.length;if(0===i)return e;if(2===i)return[[0,1]];let s,n;for(s=0;s<i-1;s++)for(n=s+1;n<i;n++)e.push([s,n]);return e}function we(t){return t.reduce(((t,e,i)=>t+e*i),0)/t.reduce(((t,e)=>t+Math.abs(e)),0)}function ke(t,e){const i=t.length-1,s=t[i];return(s-t[0])/(i)}class Se{constructor(t){this.options=t,this.min=void 0,this.max=void 0,this.minIndex=void 0,this.maxIndex=void 0,this.min=t.min,this.max=t.max,this.minIndex=0,this.maxIndex=t.max-t.min}}class Pe{constructor(t,e){this.scale=t,this._ctx=e.ctx,this._userMin=e.userMin,this._userMax=e.userMax,this._range=new Se({min:e.min,max:e.max})}getTickStep(t,e,i){return 0}getTicks(){return[]}}class De extends Pe{constructor(t,e){super(t,e)}_getLabelSizes(){}_computeGridLineItems(){}getNiceTicksCount(t,e,i){return e}}class Ce extends De{constructor(t,e){super(t,e),this.type=t.type,this.axis=e.axis,this._range=new Se({min:e.min,max:e.max}),this.unit=t.time.unit,this.displayFormats=t.time.displayFormats,this.parser=t.time.parser,this.round=t.time.round,this.isoWeekday=t.time.isoWeekday}_parse(t){return t}}function Oe(t){const e=[];if(void 0===t[0])return e;if(n(t[0]))return e;if(o(t[0]))return e;if("string"==typeof t[0])return e;for(const i of t){if(s(i)||!a(i))break;e.push(i)}return e}function Ae(t){const e=new Map;for(const i of t){if(s(i))continue;if("string"==typeof i)e.set(i,!0);else if(o(i))for(const t in i)e.set(t,!0)}return e}function Te(t,e){if(!e)return t;if("dataY"===e)return t.map((t=>t.y));if("dataX"===e)return t.map((t=>t.x));if("label"===e)return t.map((t=>t.label));if("value"===e)return t.map((t=>t.value));if("$index"===e)return t.map(((t,e)=>e));if("$key"===e)return t.map(((t,e)=>t._key||""));throw new Error("Invalid data: "+e)}function Le(t,e){const i=[];for(let s=0;s<t.length;s++){const n=t[s];for(const t in n){if(void 0===e||e.has(t)){let e=i.find((e=>e.key===t));e||(e={key:t,values:[]},i.push(e)),e.values.push(n[t])}}}return i}function Ee(t,e,i){for(const s of t){const t=s[e];for(const e in t)i(e,t[e])}}function Re(t){const e={};for(const i of t)e[i._key]=i._value;return e}const Ie=t=>t,ze=t=>t?1:0,Fe={toPercentage:ie(1),toTitleCase:w,toDateString:Ie,toDateTimeString:Ie,toColorString:Ze,toLineHeight:(t,e)=>!a(t)?null:t*e};function Ve(t){for(const e in t)delete Fe[e];return Fe}function Be(){return Object.assign({},Fe)}const We=/^#[A-Fa-f0-9]{6}$/;function Ne(t){return Number.isFinite(t)?t.toString(16).padStart(2,"0"):"00"}function He(t){if(!We.test(t))throw new Error("Invalid hex color");const e=t.slice(1);return{r:parseInt(e.slice(0,2),16),g:parseInt(e.slice(2,4),16),b:parseInt(e.slice(4,6),16)}}function je(t){const{r:e,g:i,b:s}=He(t);return(e*299+i*587+s*114)/1e3}function $e(t){const e=He(t),i=Object.values(e).map((t=>t/255));return i}function Ye(t){const[e,i,s]=$.Le(t);return e*299+i*587+s*114}function Ue(t){const e=He(t);return"rgba("+e.r+","+e.g+","+e.b+","+1+")"}class Xe{constructor(t,e,i){this.parentClass=t,this.targetClass=e,this.map=i}has(t){return this.map.has(t)}apply(t){const e=this.map.get(t);e&&e.call(t)}}const qe=(t,e)=>e-t;class Ke{constructor(t){this.items=t,this.groups=[]}add(t){const e=this.items.indexOf(t);e>-1&&this.groups.push([e])}push(t,e){const i=this.items.indexOf(t);i>-1&&this.groups.push([i,e])}sort(t){this.groups.sort(t)}}function Ge(t){const e={};for(let i=0;i<t.length;i++)e[t[i]]=i;return e}function Ze(t){const e=new Map;return t.forEach((t,i)=>{e.set(t,i)}),e}class Je{constructor(t){this.buckets=new Map,this.size=0,this.items=[],t&&this.push(...t)}push(...t){for(let e=0;e<t.length;e++){const i=t[e];this.has(i)||this._add(i)}return this.size}has(t){return this.buckets.has(t)}_add(t){this.buckets.set(t,this.size),this.items[this.size]=t,this.size+=1}}class Qe{constructor(t){this.options=t||{},this.min=this.options.min||0,this.max=this.options.max||1,this.range=this.max-this.min,this.precision=this.options.precision||0,this.log=this.options.logarithmic}isInRange(t){return t>=this.min&&t<=this.max}}const ti={left(t,e,i,s){return[t[0]-s,e[1]+(i[0]-e[0])/2]},top(t,e,i,s){return[t[0]+(i[0]-e[0])/2,e[1]-s]},right(t,e,i,s){return[t[0]+s,e[1]+(i[0]-e[0])/2]},bottom(t,e,i,s){return[t[0]+(i[0]-e[0])/2,t[1]+s]}};const ei={outside:Object.assign({},ti),inside:Object.assign({},ti)};const ii={};const si=t=>{const e=ge(ii,t,void 0);return void 0===e&&console.warn("Formatter for "+t+" not found"),e};class ni{constructor(t,e){this.chart=t,this.options=e,this.formatters=Be()}format(t){return fe(t,this.formatters)}_tooltip(t){}}}(this));</script>
+
+<script>
+/* ===================== DADOS REAIS (agregados da base Cadeia de Faturamento) ===================== */
+const DATA = {
+  monthly: [
+    {Mes:"2026-05", Bruto:1527034.57, GlosaImediata:9151.82, GlosaAcatada:0.0, Recursado:6029.20, NaoRecursado:3122.62, Recebido:701372.07, Guias:8777, Glosa:9151.82, Liquido:1517882.75, TaxaGlosa:0.60},
+    {Mes:"2026-06", Bruto:1413523.51, GlosaImediata:0.0, GlosaAcatada:0.0, Recursado:0.0, NaoRecursado:0.0, Recebido:715.68, Guias:8066, Glosa:0.0, Liquido:1413523.51, TaxaGlosa:0.0},
+    {Mes:"2026-07", Bruto:1832317.73, GlosaImediata:0.0, GlosaAcatada:0.0, Recursado:0.0, NaoRecursado:0.0, Recebido:0.0, Guias:10639, Glosa:0.0, Liquido:1832317.73, TaxaGlosa:0.0}
+  ],
+  convenio: {
+    "BRADESCO SAÚDE (SP)":3507539.51, "BRADESCO OPERADORA (SP)":608243.75, "BRADESCO SAÚDE (LASER)":309225.00,
+    "BRADESCO SAÚDE (CEOSP)":179368.22, "BRADESCO SAÚDE (CLINOFT)":91196.61, "BRADESCO OPERADORA (LASER)":32764.08,
+    "BRADESCO OPERADORA (CEOSP)":31823.71, "BRADESCO OPERADORA (CLINOFT)":12388.39, "BRADESCO SAÚDE":326.54
+  },
+  unidade: {HPAUL:1914244.33, HABC:1101705.73, SAMARO:662885.99, LASER:342361.42, CEOSP:211252.48, SANDRE:200334.61, CLINOFT:103585.00, DIAD:86977.53, SCSUL:82336.23, MAUA:67192.49},
+  procedimento: {
+    "Consulta Eletiva":1892893.55, "Consulta Médica Especializada":1161192.19, "Consulta de Urgência":663143.74,
+    "Mapeamento de Retina":207613.88, "Campimetria Computadorizada (Monocular)":205251.89, "Tomografia de Coerência Óptica (OCT)":96608.80,
+    "Topografia (Monocular)":91639.01, "Fotocoagulação a Laser (Monocular)":85790.42, "Retinografia Colorida (Monocular)":78655.46, "Paquimetria Ultra-sônica":73362.24
+  },
+  responsavel: {"HORE":2137104.73, "POLIANI SILVA":359665.06, "RODRIGO GUTIERREZ":359182.21, "NATACHA MATOS":289353.83, "ENZO GARCIA":282596.77},
+  status_recebimento: {"Recebido Total":678420.65, "Não Recebido":4061636.24, "Glosa":32818.92},
+  glosa_categoria: {"Glosa Imediata (retida)":9151.82, "Recursado (em análise)":6029.20, "Recebido do Recurso":0.0, "Não Recursado (perdido)":3122.62, "Glosa Acatada (definitiva)":0.0},
+  totais: {bruto:4772875.81, glosa:9151.82, liquido:4763723.99, guias:27484, recebido:702087.75, a_receber:4070788.06}
+};
+
+/* ===================== HELPERS ===================== */
+function fmtBRL(v, compact=false){
+  if(compact){
+    if(Math.abs(v) >= 1000000) return 'R$ ' + (v/1000000).toFixed(2).replace('.',',') + ' mi';
+    if(Math.abs(v) >= 1000) return 'R$ ' + (v/1000).toFixed(0) + ' mil';
+  }
+  return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:2});
+}
+function fmtNum(v){ return v.toLocaleString('pt-BR'); }
+function fmtPct(v){ return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%'; }
+function monthLabel(m){ return {"2026-05":"Mai/26","2026-06":"Jun/26","2026-07":"Jul/26"}[m] || m; }
+
+Chart.defaults.color = '#9096a8';
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.font.size = 11.5;
+
+const PALETTE = ['#2dd4bf','#5b8cff','#ff9d4d','#a78bfa','#facc15','#ff6a6a','#4ade80','#f472b6','#38bdf8','#fb923c'];
+
+function gridStyle(){ return {color:'rgba(255,255,255,.05)', drawTicks:false}; }
+function tooltipStyle(){
+  return {
+    backgroundColor:'#1e1e2a', titleColor:'#eef0f5', bodyColor:'#c7cad6',
+    borderColor:'rgba(255,255,255,.12)', borderWidth:1, padding:12, cornerRadius:10,
+    titleFont:{weight:'700', size:12.5}, bodyFont:{size:12}, displayColors:true, boxPadding:4
+  };
+}
+
+/* ===================== KPIs ===================== */
+const kpiGrid = document.getElementById('kpiGrid');
+const t = DATA.totais;
+const ticketMedio = t.bruto / t.guias;
+const taxaGlosaTotal = (t.glosa / t.bruto) * 100;
+
+const mJun = DATA.monthly[1], mJul = DATA.monthly[2];
+const varBruto = ((mJul.Bruto - mJun.Bruto) / mJun.Bruto) * 100;
+const varGuias = ((mJul.Guias - mJun.Guias) / mJun.Guias) * 100;
+const varTicket = ((mJul.Bruto/mJul.Guias) - (mJun.Bruto/mJun.Guias)) / (mJun.Bruto/mJun.Guias) * 100;
+
+const kpis = [
+  {label:'Faturamento Bruto', icon:'💰', value: fmtBRL(t.bruto), sub:'mai–jul/2026', delta: varBruto, accent:'var(--teal)'},
+  {label:'Faturamento Líquido', icon:'✅', value: fmtBRL(t.liquido), sub:`${fmtPct(100-taxaGlosaTotal)} do bruto`, delta: varBruto, accent:'var(--blue)'},
+  {label:'Total de Glosas', icon:'⚠️', value: fmtBRL(t.glosa), sub:`${fmtPct(taxaGlosaTotal)} do faturamento`, delta: -100, accent:'var(--orange)', special:true},
+  {label:'Ticket Médio / Guia', icon:'🎫', value: fmtBRL(ticketMedio), sub:'por procedimento faturado', delta: varTicket, accent:'var(--violet)'},
+  {label:'Total de Guias', icon:'📋', value: fmtNum(t.guias), sub:'procedimentos faturados', delta: varGuias, accent:'var(--amber)'},
+];
+
+kpiGrid.innerHTML = kpis.map((k,i)=>{
+  const isUp = k.delta >= 0;
+  const deltaLabel = k.special ? 'Concentrada em maio' : `${isUp?'+':''}${k.delta.toFixed(1)}% vs. mês ant.`;
+  const arrow = k.special ? '↓' : (isUp?'↑':'↓');
+  const deltaClass = k.special ? 'delta-up' : (isUp?'delta-up':'delta-down');
+  return `
+  <div class="kpi" style="--accent:${k.accent}; animation-delay:${i*.05}s">
+    <div class="kpi-label"><span>${k.icon}</span>${k.label}</div>
+    <div class="kpi-value">${k.value}</div>
+    <div class="kpi-sub">${k.sub}</div>
+    <div class="kpi-delta ${deltaClass}">${arrow} ${deltaLabel}</div>
+  </div>`;
+}).join('');
+
+/* ===================== CHART 1: Evolução Bruto x Líquido ===================== */
+const ctxEvo = document.getElementById('chartEvolucao');
+new Chart(ctxEvo, {
+  type:'line',
+  data:{
+    labels: DATA.monthly.map(m=>monthLabel(m.Mes)),
+    datasets:[
+      {
+        label:'Faturamento Bruto', data: DATA.monthly.map(m=>m.Bruto),
+        borderColor:'#2dd4bf', backgroundColor:'rgba(45,212,191,.12)', fill:true, tension:.4,
+        pointBackgroundColor:'#2dd4bf', pointRadius:5, pointHoverRadius:7, borderWidth:3, yAxisID:'y'
+      },
+      {
+        label:'Faturamento Líquido', data: DATA.monthly.map(m=>m.Liquido),
+        borderColor:'#5b8cff', backgroundColor:'rgba(91,140,255,.10)', fill:true, tension:.4,
+        pointBackgroundColor:'#5b8cff', pointRadius:5, pointHoverRadius:7, borderWidth:3, borderDash:[6,4], yAxisID:'y'
+      },
+      {
+        label:'Taxa de Glosa (%)', data: DATA.monthly.map(m=>m.TaxaGlosa),
+        borderColor:'#ff9d4d', backgroundColor:'transparent', tension:.4, borderWidth:2,
+        pointBackgroundColor:'#ff9d4d', pointRadius:4, yAxisID:'y1', borderDash:[2,3]
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index', intersect:false},
+    plugins:{
+      legend:{position:'top', align:'end', labels:{boxWidth:10, boxHeight:10, usePointStyle:true, padding:16}},
+      tooltip:{...tooltipStyle(), callbacks:{
+        label:(c)=> c.dataset.yAxisID==='y1' ? ` ${c.dataset.label}: ${c.parsed.y.toFixed(2)}%` : ` ${c.dataset.label}: ${fmtBRL(c.parsed.y)}`
+      }}
+    },
+    scales:{
+      x:{grid:{display:false}},
+      y:{position:'left', grid:gridStyle(), ticks:{callback:(v)=>fmtBRL(v,true)}},
+      y1:{position:'right', grid:{display:false}, ticks:{callback:(v)=>v+'%'}, min:0}
+    }
+  }
+});
+document.getElementById('insightEvolucao').innerHTML = `Faturamento bruto <b>cresceu ${varBruto.toFixed(1)}%</b> de junho para julho, acompanhado por <b>+${varGuias.toFixed(1)}% no volume de guias</b>. A glosa se concentrou inteiramente em maio (R$ 9.151,82), com junho e julho zerados até o momento do corte de dados.`;
+
+/* ===================== CHART 2: Convênio ===================== */
+const convEntries = Object.entries(DATA.convenio).sort((a,b)=>b[1]-a[1]);
+new Chart(document.getElementById('chartConvenio'), {
+  type:'bar',
+  data:{
+    labels: convEntries.map(e=>e[0]),
+    datasets:[{
+      label:'Faturamento', data: convEntries.map(e=>e[1]),
+      backgroundColor: convEntries.map((_,i)=> i===0 ? '#2dd4bf' : 'rgba(91,140,255,.55)'),
+      borderRadius:6, barThickness:16
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tooltipStyle(), callbacks:{label:(c)=>' '+fmtBRL(c.parsed.x)}}},
+    scales:{
+      x:{grid:gridStyle(), ticks:{callback:(v)=>fmtBRL(v,true)}},
+      y:{grid:{display:false}, ticks:{font:{size:10.5}}}
+    }
+  }
+});
+const pctBradescoSP = (DATA.convenio["BRADESCO SAÚDE (SP)"]/t.bruto*100).toFixed(1);
+document.getElementById('insightConvenio').innerHTML = `A carteira é <b>100% Bradesco</b> (planos/unidades distintos). O plano <b>Bradesco Saúde (SP) responde por ${pctBradescoSP}%</b> de todo o faturamento — forte concentração de risco em um único pagador.`;
+
+/* ===================== CHART 3: Unidade ===================== */
+const uniEntries = Object.entries(DATA.unidade).sort((a,b)=>b[1]-a[1]);
+new Chart(document.getElementById('chartUnidade'), {
+  type:'bar',
+  data:{
+    labels: uniEntries.map(e=>e[0]),
+    datasets:[{ data: uniEntries.map(e=>e[1]), backgroundColor:'rgba(45,212,191,.55)', hoverBackgroundColor:'#2dd4bf', borderRadius:8, maxBarThickness:38 }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tooltipStyle(), callbacks:{label:(c)=>' '+fmtBRL(c.parsed.y)}}},
+    scales:{ x:{grid:{display:false}, ticks:{font:{size:10.5}}}, y:{grid:gridStyle(), ticks:{callback:(v)=>fmtBRL(v,true)}} }
+  }
+});
+document.getElementById('insightUnidade').innerHTML = `<b>HPAUL</b> e <b>HABC</b> concentram <b>${((uniEntries[0][1]+uniEntries[1][1])/t.bruto*100).toFixed(0)}%</b> do faturamento total, confirmando-se como as unidades hospitalares âncora da rede.`;
+
+/* ===================== CHART 4: Procedimentos ===================== */
+const procEntries = Object.entries(DATA.procedimento).sort((a,b)=>b[1]-a[1]);
+new Chart(document.getElementById('chartProcedimento'), {
+  type:'bar',
+  data:{
+    labels: procEntries.map(e=>e[0]),
+    datasets:[{ data: procEntries.map(e=>e[1]), backgroundColor: procEntries.map((_,i)=>PALETTE[i%PALETTE.length]+'cc'), borderRadius:6, barThickness:14 }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tooltipStyle(), callbacks:{label:(c)=>' '+fmtBRL(c.parsed.x)}}},
+    scales:{ x:{grid:gridStyle(), ticks:{callback:(v)=>fmtBRL(v,true)}}, y:{grid:{display:false}, ticks:{font:{size:10}}} }
+  }
+});
+document.getElementById('insightProcedimento').innerHTML = `As três primeiras posições são todas <b>consultas</b> (eletiva, especializada e urgência), somando <b>${((procEntries[0][1]+procEntries[1][1]+procEntries[2][1])/t.bruto*100).toFixed(0)}%</b> do faturamento — procedimentos diagnósticos de retina/OCT aparecem na sequência.`;
+
+/* ===================== CHART 5: Glosa por categoria ===================== */
+const glosaEntries = Object.entries(DATA.glosa_categoria);
+new Chart(document.getElementById('chartGlosaCategoria'), {
+  type:'bar',
+  data:{
+    labels: glosaEntries.map(e=>e[0]),
+    datasets:[{ data: glosaEntries.map(e=>e[1]), backgroundColor:['#ff6a6a','#facc15','#4ade80','#ff9d4d','#a78bfa'], borderRadius:6, barThickness:16 }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tooltipStyle(), callbacks:{label:(c)=>' '+fmtBRL(c.parsed.x)}}},
+    scales:{ x:{grid:gridStyle(), ticks:{callback:(v)=>fmtBRL(v,true)}}, y:{grid:{display:false}, ticks:{font:{size:9.5}}} }
+  }
+});
+document.getElementById('insightGlosaCategoria').innerHTML = `Do total glosado, <b>R$ 6.029,20 já foi recursado</b> e aguarda análise da operadora; <b>R$ 3.122,62 não foi recursado</b> e tende a virar perda definitiva.`;
+
+/* ===================== CHART 6: Taxa de glosa (área) ===================== */
+new Chart(document.getElementById('chartTaxaGlosa'), {
+  type:'line',
+  data:{
+    labels: DATA.monthly.map(m=>monthLabel(m.Mes)),
+    datasets:[{
+      label:'Taxa de Glosa', data: DATA.monthly.map(m=>m.TaxaGlosa),
+      borderColor:'#ff6a6a', backgroundColor:'rgba(255,106,106,.18)', fill:true, tension:.35,
+      pointBackgroundColor:'#ff6a6a', pointRadius:5, borderWidth:3
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tooltipStyle(), callbacks:{label:(c)=>' '+c.parsed.y.toFixed(2)+'%'}}},
+    scales:{ x:{grid:{display:false}}, y:{grid:gridStyle(), ticks:{callback:(v)=>v+'%'}, min:0} }
+  }
+});
+document.getElementById('insightTaxaGlosa').innerHTML = `A taxa de glosa caiu de <b>0,60% em maio para 0,00%</b> em junho e julho — sinal positivo, mas vale monitorar se guias recentes ainda estão em análise pela operadora.`;
+
+/* ===================== CHART 7: Status de recebimento (donut) ===================== */
+const statusEntries = Object.entries(DATA.status_recebimento);
+new Chart(document.getElementById('chartStatus'), {
+  type:'doughnut',
+  data:{
+    labels: statusEntries.map(e=>e[0]),
+    datasets:[{ data: statusEntries.map(e=>e[1]), backgroundColor:['#2dd4bf','#5c6274','#ff6a6a'], borderColor:'#14141d', borderWidth:3, hoverOffset:8 }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, cutout:'68%',
+    plugins:{
+      legend:{position:'bottom', labels:{boxWidth:10, boxHeight:10, usePointStyle:true, padding:14, font:{size:11}}},
+      tooltip:{...tooltipStyle(), callbacks:{label:(c)=>` ${c.label}: ${fmtBRL(c.parsed)} (${(c.parsed/t.bruto*100).toFixed(1)}%)`}}
+    }
+  }
+});
+const pctNaoReceb = (DATA.status_recebimento["Não Recebido"]/t.bruto*100).toFixed(1);
+document.getElementById('insightStatus').innerHTML = `<b>${pctNaoReceb}%</b> do faturamento ainda está <b>pendente de recebimento</b> — natural para o período (guias recentes em ciclo de pagamento), mas requer acompanhamento do fluxo de caixa.`;
+
+/* ===================== CHART 8: Responsáveis ===================== */
+const respEntries = Object.entries(DATA.responsavel).sort((a,b)=>b[1]-a[1]);
+new Chart(document.getElementById('chartResponsavel'), {
+  type:'bar',
+  data:{
+    labels: respEntries.map(e=>e[0]),
+    datasets:[{ data: respEntries.map(e=>e[1]), backgroundColor: respEntries.map((_,i)=> i===0 ? '#5b8cff' : 'rgba(45,212,191,.55)'), borderRadius:8, maxBarThickness:60 }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tooltipStyle(), callbacks:{label:(c)=>' '+fmtBRL(c.parsed.y)}}},
+    scales:{ x:{grid:{display:false}}, y:{grid:gridStyle(), ticks:{callback:(v)=>fmtBRL(v,true)}} }
+  }
+});
+document.getElementById('insightResponsavel').innerHTML = `<b>HORE</b> lidera a criação de contas com <b>${(respEntries[0][1]/t.bruto*100).toFixed(0)}%</b> do faturamento sob sua responsabilidade — provavelmente um usuário de sistema/integração, dado o volume muito acima dos demais.`;
+
+/* ===================== TABELA ===================== */
+const tbody = document.getElementById('tableBody');
+tbody.innerHTML = DATA.monthly.map(m=>{
+  const tagClass = m.TaxaGlosa > 1 ? 'tag-bad' : m.TaxaGlosa > 0.3 ? 'tag-warn' : 'tag-good';
+  return `<tr>
+    <td style="font-weight:700">${monthLabel(m.Mes)}</td>
+    <td class="mono">${fmtNum(m.Guias)}</td>
+    <td class="mono">${fmtBRL(m.Bruto)}</td>
+    <td class="mono">${fmtBRL(m.Glosa)}</td>
+    <td class="mono" style="font-weight:600">${fmtBRL(m.Liquido)}</td>
+    <td class="mono ${tagClass}">${m.TaxaGlosa.toFixed(2)}%</td>
+  </tr>`;
+}).join('') + `
+  <tr style="background:rgba(255,255,255,.03)">
+    <td style="font-weight:800">Total</td>
+    <td class="mono" style="font-weight:800">${fmtNum(t.guias)}</td>
+    <td class="mono" style="font-weight:800">${fmtBRL(t.bruto)}</td>
+    <td class="mono" style="font-weight:800">${fmtBRL(t.glosa)}</td>
+    <td class="mono" style="font-weight:800">${fmtBRL(t.liquido)}</td>
+    <td class="mono" style="font-weight:800">${(t.glosa/t.bruto*100).toFixed(2)}%</td>
+  </tr>`;
+
+/* ===================== FILTRO DE PERÍODO ===================== */
+document.getElementById('filterGroup').addEventListener('click', (e)=>{
+  if(!e.target.classList.contains('filter-btn')) return;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  const period = e.target.dataset.period;
+  document.querySelectorAll('#tableBody tr').forEach((row, idx)=>{
+    if(idx >= DATA.monthly.length) return;
+    const m = DATA.monthly[idx].Mes;
+    row.style.opacity = (period==='all' || period===m) ? '1' : '.25';
+  });
+});
+</script>
+</body>
+</html>
