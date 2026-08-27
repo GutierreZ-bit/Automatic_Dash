@@ -95,6 +95,10 @@ O arquivo `DataHub_Pro_Offline.html` é uma ferramenta genérica para trabalhar 
 
 Para usar, abra o arquivo no navegador, carregue a planilha e selecione as colunas e filtros desejados.
 
+## 📊 Dashboard Vision One
+
+O arquivo `Dashboard_Brad (1).html` reproduz o dashboard executivo encaminhado, com KPIs, gráficos financeiros, operação por unidade, glosas, recebimento, responsáveis e resumo mensal. O Chart.js está embutido no próprio arquivo e os dados são os agregados da base Vision One.
+
 ## 📝 Dados Consolidados
 
 ### Faturamento por Mês
