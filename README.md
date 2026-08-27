@@ -83,6 +83,18 @@ Todos os dados estão embutidos no arquivo e extraídos da base **Cadeia de Fatu
 - **Formato**: HTML5 (single file)
 - **Compatibilidade**: Todos os navegadores modernos
 
+## 🧰 DataHub Pro Offline
+
+O arquivo `DataHub_Pro_Offline.html` é uma ferramenta genérica para trabalhar com novas bases localmente:
+
+- Importação de arquivos `.csv`, `.xlsx` e `.xls`
+- Filtros dinâmicos por coluna
+- Geração de gráficos de barras, linhas e pizza
+- Exportação dos dados filtrados em CSV, JSON ou HTML
+- Execução 100% offline, sem CDN ou chamadas externas
+
+Para usar, abra o arquivo no navegador, carregue a planilha e selecione as colunas e filtros desejados.
+
 ## 📝 Dados Consolidados
 
 ### Faturamento por Mês

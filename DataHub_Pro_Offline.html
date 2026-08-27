@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataHub Pro — Upload, Filtro & Dashboard Dinâmico</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  
+  :root {
+    --bg: #0f0f1e;
+    --bg2: #1a1a2e;
+    --border: rgba(255,255,255,.08);
+    --text: #e0e0e0;
+    --text-dim: #999;
+    --accent: #00d4ff;
+    --success: #00ff88;
+    --error: #ff3333;
+  }
+  
+  body {
+    background: linear-gradient(135deg, var(--bg) 0%, #1a0033 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .container { max-width: 1400px; margin: 0 auto; }
+  
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown .6s ease;
+  }
+  
+  h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--accent), #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .subtitle { 
+    color: var(--text-dim); 
+    font-size: 13px; 
+    margin-top: 8px;
+  }
+  
+  .offline-badge {
+    display: inline-block;
+    background: rgba(0,255,136,.1);
+    border: 1px solid var(--success);
+    color: var(--success);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+  
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  
+  .tab-btn {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all .3s;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+  }
+  
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  
+  .tab-btn:hover { color: var(--text); }
+  
+  .tab-content { display: none; animation: fadeIn .4s; }
+  .tab-content.active { display: block; }
+  
+  .section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+  
+  .upload-area {
+    border: 2px dashed var(--accent);
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .3s;
+  }
+  
+  .upload-area:hover {
+    background: rgba(0,212,255,.05);
+    border-color: #ff00ff;
+  }
+  
+  .upload-area p { color: var(--text-dim); margin: 10px 0; }
+  
+  input[type="file"] { display: none; }
+  
+  button {
+    background: linear-gradient(135deg, var(--accent), #ff00ff);
+    border: none;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all .3s;
+    font-family: inherit;
+  }
+  
+  button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,212,255,.3); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  
+  .data-grid {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th {
+    background: rgba(0,212,255,.1);
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.03);
+    font-size: 12px;
+  }
+  
+  tr:hover { background: rgba(0,212,255,.05); }
+  
+  .filter-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .filter-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  
+  input, select {
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: inherit;
+  }
+  
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(0,212,255,.3);
+  }
+  
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    background: rgba(0,212,255,.05);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  
+  .chart-container {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  canvas {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  .message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+  
+  .message.success {
+    background: rgba(0,255,136,.1);
+    border: 1px solid var(--success);
+    color: var(--success);
+  }
+  
+  .message.error {
+    background: rgba(255,51,51,.1);
+    border: 1px solid var(--error);
+    color: var(--error);
+  }
+  
+  .message.info {
+    background: rgba(0,212,255,.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  
+  @media (max-width: 768px) {
+    h1 { font-size: 24px; }
+    .tabs { gap: 5px; }
+    .tab-btn { padding: 8px 12px; font-size: 12px; }
+    .chart-container { height: 300px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📊 DataHub Pro</h1>
+    <p class="subtitle">Upload Excel → Filtro → Dashboard Dinâmico → Exportar</p>
+    <div class="offline-badge">✅ 100% Offline - Sem Internet Necessária</div>
+  </header>
+  
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="upload">📤 Upload</button>
+    <button class="tab-btn" data-tab="dados">📋 Dados & Filtros</button>
+    <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="export">💾 Exportar</button>
+  </div>
+  
+  <!-- TAB 1: UPLOAD -->
+  <div id="upload" class="tab-content active">
+    <div class="section">
+      <div class="section-title">Carregar Arquivo Excel ou CSV</div>
+      <div class="upload-area" id="uploadArea">
+        <p style="font-size:32px">📁</p>
+        <p><strong>Clique ou arraste um arquivo aqui</strong></p>
+        <p style="color:var(--text-dim); font-size:11px">Suporta .xlsx, .csv</p>
+        <input type="file" id="fileInput" accept=".xlsx,.csv,.xls">
+      </div>
+      <div id="uploadMessage"></div>
+    </div>
+  </div>
+  
+  <!-- TAB 2: DADOS & FILTROS -->
+  <div id="dados" class="tab-content">
+    <div class="section">
+      <div class="section-title">Filtros Avançados</div>
+      <div class="filter-group" id="filterGroup"></div>
+      <div class="button-group">
+        <button onclick="applyFilters()">🔍 Aplicar Filtros</button>
+        <button onclick="resetFilters()" style="background: transparent; color: var(--text-dim); border: 1px solid var(--border);">↺ Limpar</button>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Estatísticas</div>
+      <div class="stats" id="statsContainer"></div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Dados Carregados (primeiras 100 linhas)</div>
+      <div class="data-grid">
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div id="noDataMessage" style="text-align:center; padding:40px; color:var(--text-dim);">
+        📂 Nenhum arquivo carregado. Vá para a aba "Upload" para começar.
+      </div>
+    </div>
+  </div>
+  
+  <!-- TAB 3: DASHBOARD -->
+  <div id="dashboard" class="tab-content">
+    <div class="section">
+      <div class="section-title">Configurar Dashboard</div>
+      <div class="filter-group">
+        <div class="filter-item">
+          <label>Coluna para Eixo X</label>
+          <select id="xAxisColumn">
+            <option>Selecione uma coluna</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Coluna para Eixo Y (Valores)</label>
+          <select id="yAxisColumn">
+            <option>Selecione uma coluna</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Tipo de Gráfico</label>
+          <select id="chartType">
+            <option value="bar">Barras</option>
+            <option value="line">Linhas</option>
+            <option value="pie">Pizza</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <button onclick="generateDashboard()" style="width:100%; margin-top:24px;">🎨 Gerar Dashboard</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="chart-container">
+        <canvas id="dynamicChart" width="800" height="400"></canvas>
+      </div>
+    </div>
+    
+    <div id="dashboardMessage"></div>
+  </div>
+  
+  <!-- TAB 4: EXPORTAR -->
+  <div id="export" class="tab-content">
+    <div class="section">
+      <div class="section-title">Exportar Dados</div>
+      <div class="filter-group">
+        <div class="filter-item">
+          <label>Formato de Exportação</label>
+          <select id="exportFormat">
+            <option value="csv">CSV (Planilha)</option>
+            <option value="json">JSON (Estruturado)</option>
+            <option value="html">HTML (Tabela Web)</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <button onclick="exportData()" style="width:100%; margin-top:24px;">📥 Baixar Arquivo</button>
+        </div>
+      </div>
+      <div id="exportMessage"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ DADOS GLOBAIS ============
+let globalData = [];
+let filteredData = [];
+let columns = [];
+let chart = null;
+
+// ============ UPLOAD ============
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.style.background = 'rgba(0,212,255,.1)';
+});
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.style.background = '';
+});
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files[0]) processFile(e.target.files[0]);
+});
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const content = e.target.result;
+      
+      if (file.name.endsWith('.csv')) {
+        globalData = parseCSV(content);
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        globalData = parseXLSX(new Uint8Array(content));
+      }
+      
+      if (globalData.length === 0) throw new Error('Arquivo vazio');
+      
+      columns = Object.keys(globalData[0]);
+      filteredData = [...globalData];
+      
+      renderData();
+      buildFilters();
+      buildChartSelects();
+      
+      showMessage('uploadMessage', `✅ ${globalData.length} linhas carregadas com sucesso!`, 'success');
+    } catch (err) {
+      showMessage('uploadMessage', `❌ Erro ao ler arquivo: ${err.message}`, 'error');
+    }
+  };
+  
+  if (file.name.endsWith('.csv')) {
+    reader.readAsText(file);
+  } else {
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function parseCSV(content) {
+  const lines = content.trim().split('\n');
+  if (lines.length < 2) return [];
+  
+  const headers = lines[0].split(',').map(h => h.trim());
+  const data = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim());
+    const row = {};
+    headers.forEach((h, j) => {
+      row[h] = values[j] || '';
+    });
+    data.push(row);
+  }
+  
+  return data;
+}
+
+function parseXLSX(data) {
+  try {
+    const view = new Uint8Array(data);
+    const ZIP_LOCAL_FILE_HEADER = 0x04034b50;
+    let pos = 0;
+    let files = [];
+    
+    while (pos < view.length) {
+      const sig = view[pos] | (view[pos + 1] << 8) | (view[pos + 2] << 16) | (view[pos + 3] << 24);
+      if (sig !== ZIP_LOCAL_FILE_HEADER) break;
+      
+      const nameLen = view[pos + 26] | (view[pos + 27] << 8);
+      const extraLen = view[pos + 28] | (view[pos + 29] << 8);
+      const compSize = view[pos + 18] | (view[pos + 19] << 8) | (view[pos + 20] << 16) | (view[pos + 21] << 24);
+      
+      const name = new TextDecoder().decode(view.slice(pos + 30, pos + 30 + nameLen));
+      const fileData = view.slice(pos + 30 + nameLen + extraLen, pos + 30 + nameLen + extraLen + compSize);
+      
+      files.push({ name, data: fileData });
+      pos += 30 + nameLen + extraLen + compSize;
+    }
+    
+    const xmlFile = files.find(f => f.name.includes('sheet1.xml'));
+    if (!xmlFile) return [];
+    
+    const xmlText = new TextDecoder().decode(xmlFile.data);
+    const rows = xmlText.match(/<row[^>]*>(.*?)<\/row>/g) || [];
+    
+    if (rows.length === 0) return [];
+    
+    const data = [];
+    const headerRow = rows[0];
+    const cells = headerRow.match(/<c[^>]*><v>([^<]*)<\/v><\/c>/g) || [];
+    const headers = cells.map(c => c.match(/>([^<]*)<\/c>/)[1]);
+    
+    for (let i = 1; i < rows.length; i++) {
+      const cells = rows[i].match(/<c[^>]*><v>([^<]*)<\/v><\/c>/g) || [];
+      const row = {};
+      headers.forEach((h, j) => {
+        row[h] = (cells[j] || '').match(/>([^<]*)<\/c>/)?.[1] || '';
+      });
+      data.push(row);
+    }
+    
+    return data;
+  } catch (e) {
+    return [];
+  }
+}
+
+function buildFilters() {
+  const filterGroup = document.getElementById('filterGroup');
+  filterGroup.innerHTML = '';
+  
+  columns.slice(0, 5).forEach(col => {
+    const values = [...new Set(globalData.map(r => r[col]))].slice(0, 10);
+    
+    const item = document.createElement('div');
+    item.className = 'filter-item';
+    item.innerHTML = `
+      <label>${col}</label>
+      <select class="filter-select" data-column="${col}">
+        <option value="">Todos</option>
+        ${values.map(v => `<option value="${v}">${v}</option>`).join('')}
+      </select>
+    `;
+    filterGroup.appendChild(item);
+  });
+}
+
+function buildChartSelects() {
+  const xSelect = document.getElementById('xAxisColumn');
+  const ySelect = document.getElementById('yAxisColumn');
+  
+  xSelect.innerHTML = '<option>Selecione uma coluna</option>' + 
+    columns.map(c => `<option value="${c}">${c}</option>`).join('');
+  
+  ySelect.innerHTML = '<option>Selecione uma coluna</option>' + 
+    columns.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function applyFilters() {
+  filteredData = [...globalData];
+  
+  document.querySelectorAll('.filter-select').forEach(select => {
+    const col = select.dataset.column;
+    const val = select.value;
+    if (val) {
+      filteredData = filteredData.filter(r => r[col] == val);
+    }
+  });
+  
+  renderData();
+  showMessage('', `✅ ${filteredData.length} linhas encontradas`, 'info', 'dados');
+}
+
+function resetFilters() {
+  document.querySelectorAll('.filter-select').forEach(s => s.value = '');
+  applyFilters();
+}
+
+function renderData() {
+  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById('tableBody');
+  const noDataMsg = document.getElementById('noDataMessage');
+  
+  if (filteredData.length === 0) {
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+    noDataMsg.style.display = 'block';
+    return;
+  }
+  
+  noDataMsg.style.display = 'none';
+  
+  thead.innerHTML = `<tr>${columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
+  tbody.innerHTML = filteredData.slice(0, 100).map(row => 
+    `<tr>${columns.map(c => `<td>${row[c]}</td>`).join('')}</tr>`
+  ).join('');
+  
+  renderStats();
+}
+
+function renderStats() {
+  const statsContainer = document.getElementById('statsContainer');
+  statsContainer.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${filteredData.length}</div>
+      <div class="stat-label">Linhas Carregadas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${columns.length}</div>
+      <div class="stat-label">Colunas</div>
+    </div>
+  `;
+}
+
+function generateDashboard() {
+  const xCol = document.getElementById('xAxisColumn').value;
+  const yCol = document.getElementById('yAxisColumn').value;
+  const chartType = document.getElementById('chartType').value;
+  
+  if (!xCol || !yCol || xCol === 'Selecione uma coluna' || yCol === 'Selecione uma coluna') {
+    showMessage('dashboardMessage', '❌ Selecione colunas para X e Y', 'error');
+    return;
+  }
+  
+  try {
+    const grouped = {};
+    filteredData.forEach(row => {
+      const x = row[xCol];
+      const yVal = parseFloat(row[yCol]) || 0;
+      grouped[x] = (grouped[x] || 0) + yVal;
+    });
+    
+    const labels = Object.keys(grouped).slice(0, 20);
+    const data = labels.map(l => grouped[l]);
+    
+    drawChart(labels, data, chartType, yCol);
+    showMessage('dashboardMessage', '✅ Dashboard gerado com sucesso!', 'success');
+  } catch (err) {
+    showMessage('dashboardMessage', `❌ Erro: ${err.message}`, 'error');
+  }
+}
+
+function drawChart(labels, data, type, yLabel) {
+  const canvas = document.getElementById('dynamicChart');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  
+  ctx.fillStyle = '#0f0f1e';
+  ctx.fillRect(0, 0, w, h);
+  
+  const padding = 50;
+  const maxValue = Math.max(...data);
+  const colors = ['#00d4ff', '#ff00ff', '#00ff88', '#ffaa00', '#ff3333'];
+  
+  if (type === 'bar') {
+    const barWidth = (w - padding * 2) / labels.length;
+    labels.forEach((label, i) => {
+      const barHeight = (data[i] / maxValue) * (h - padding * 2);
+      const x = padding + i * barWidth + barWidth / 4;
+      const y = h - padding - barHeight;
+      
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fillRect(x, y, barWidth / 2, barHeight);
+      
+      ctx.fillStyle = '#999';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label.substring(0, 10), x + barWidth / 4, h - padding + 20);
+    });
+  } else if (type === 'line') {
+    ctx.strokeStyle = '#00d4ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    labels.forEach((label, i) => {
+      const x = padding + (i / (labels.length - 1)) * (w - padding * 2);
+      const y = h - padding - (data[i] / maxValue) * (h - padding * 2);
+      
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  } else if (type === 'pie') {
+    const total = data.reduce((a, b) => a + b, 0);
+    let angle = 0;
+    const centerX = w / 2;
+    const centerY = h / 2;
+    const radius = Math.min(w, h) / 2 - 20;
+    
+    data.forEach((value, i) => {
+      const sliceAngle = (value / total) * Math.PI * 2;
+      
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, angle, angle + sliceAngle);
+      ctx.closePath();
+      ctx.fill();
+      
+      angle += sliceAngle;
+    });
+  }
+  
+  ctx.strokeStyle = '#666';
+  ctx.strokeRect(padding, padding, w - padding * 2, h - padding * 2);
+}
+
+function exportData() {
+  const format = document.getElementById('exportFormat').value;
+  let content, filename, mimeType;
+  
+  if (format === 'csv') {
+    const headers = columns.join(',');
+    const rows = filteredData.map(r => columns.map(c => `"${r[c]}"`).join(','));
+    content = [headers, ...rows].join('\n');
+    filename = 'export.csv';
+    mimeType = 'text/csv';
+  } else if (format === 'json') {
+    content = JSON.stringify(filteredData, null, 2);
+    filename = 'export.json';
+    mimeType = 'application/json';
+  } else {
+    const html = `
+      <table border="1" style="border-collapse:collapse; width:100%;">
+        <tr>${columns.map(c => `<th>${c}</th>`).join('')}</tr>
+        ${filteredData.map(r => `<tr>${columns.map(c => `<td>${r[c]}</td>`).join('')}</tr>`).join('')}
+      </table>
+    `;
+    content = html;
+    filename = 'export.html';
+    mimeType = 'text/html';
+  }
+  
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  
+  showMessage('exportMessage', `✅ Arquivo "${filename}" baixado!`, 'success');
+}
+
+function showMessage(elementId, text, type, tab = null) {
+  const msg = document.createElement('div');
+  msg.className = `message ${type}`;
+  msg.innerHTML = text;
+  
+  if (elementId) {
+    const el = document.getElementById(elementId);
+    el.innerHTML = '';
+    el.appendChild(msg);
+  }
+}
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
