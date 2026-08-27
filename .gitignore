@@ -1,0 +1,37 @@
+# Arquivos do Sistema
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*~
+
+# Editor & IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+
+# Node & npm
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+venv/
+
+# Backup
+*.bak
+*.backup
+*.tmp
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+desktop.ini
