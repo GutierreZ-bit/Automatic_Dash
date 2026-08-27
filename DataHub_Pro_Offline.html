@@ -545,14 +545,17 @@ fileInput.addEventListener('change', (e) => {
 
 function processFile(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const content = e.target.result;
       
-      if (file.name.endsWith('.csv')) {
+      const fileName = file.name.toLowerCase();
+      if (fileName.endsWith('.csv')) {
         globalData = parseCSV(content);
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        globalData = parseXLSX(new Uint8Array(content));
+      } else if (fileName.endsWith('.xlsx')) {
+        globalData = await parseXLSX(new Uint8Array(content));
+      } else if (fileName.endsWith('.xls')) {
+        throw new Error('Formato .xls antigo não suportado. Salve o arquivo como .xlsx ou .csv.');
       }
       
       if (globalData.length === 0) throw new Error('Arquivo vazio');
@@ -596,54 +599,63 @@ function parseCSV(content) {
   return data;
 }
 
-function parseXLSX(data) {
-  try {
-    const view = new Uint8Array(data);
-    const ZIP_LOCAL_FILE_HEADER = 0x04034b50;
-    let pos = 0;
-    let files = [];
-    
-    while (pos < view.length) {
-      const sig = view[pos] | (view[pos + 1] << 8) | (view[pos + 2] << 16) | (view[pos + 3] << 24);
-      if (sig !== ZIP_LOCAL_FILE_HEADER) break;
-      
-      const nameLen = view[pos + 26] | (view[pos + 27] << 8);
-      const extraLen = view[pos + 28] | (view[pos + 29] << 8);
-      const compSize = view[pos + 18] | (view[pos + 19] << 8) | (view[pos + 20] << 16) | (view[pos + 21] << 24);
-      
-      const name = new TextDecoder().decode(view.slice(pos + 30, pos + 30 + nameLen));
-      const fileData = view.slice(pos + 30 + nameLen + extraLen, pos + 30 + nameLen + extraLen + compSize);
-      
-      files.push({ name, data: fileData });
-      pos += 30 + nameLen + extraLen + compSize;
-    }
-    
-    const xmlFile = files.find(f => f.name.includes('sheet1.xml'));
-    if (!xmlFile) return [];
-    
-    const xmlText = new TextDecoder().decode(xmlFile.data);
-    const rows = xmlText.match(/<row[^>]*>(.*?)<\/row>/g) || [];
-    
-    if (rows.length === 0) return [];
-    
-    const data = [];
-    const headerRow = rows[0];
-    const cells = headerRow.match(/<c[^>]*><v>([^<]*)<\/v><\/c>/g) || [];
-    const headers = cells.map(c => c.match(/>([^<]*)<\/c>/)[1]);
-    
-    for (let i = 1; i < rows.length; i++) {
-      const cells = rows[i].match(/<c[^>]*><v>([^<]*)<\/v><\/c>/g) || [];
-      const row = {};
-      headers.forEach((h, j) => {
-        row[h] = (cells[j] || '').match(/>([^<]*)<\/c>/)?.[1] || '';
-      });
-      data.push(row);
-    }
-    
-    return data;
-  } catch (e) {
-    return [];
+async function parseXLSX(data) {
+  const view = new Uint8Array(data);
+  const files = [];
+  let position = 0;
+
+  while (position + 30 <= view.length) {
+    const signature = view[position] | (view[position + 1] << 8) | (view[position + 2] << 16) | (view[position + 3] << 24);
+    if (signature !== 0x04034b50) break;
+    const method = view[position + 8] | (view[position + 9] << 8);
+    const compressedSize = readZipInt(view, position + 18);
+    const nameLength = view[position + 26] | (view[position + 27] << 8);
+    const extraLength = view[position + 28] | (view[position + 29] << 8);
+    const name = new TextDecoder().decode(view.slice(position + 30, position + 30 + nameLength));
+    const start = position + 30 + nameLength + extraLength;
+    files.push({ name, method, data: view.slice(start, start + compressedSize) });
+    position = start + compressedSize;
   }
+
+  const readFile = async (name) => {
+    const file = files.find(item => item.name === name);
+    if (!file) return '';
+    if (file.method === 0) return new TextDecoder().decode(file.data);
+    if (file.method !== 8 || typeof DecompressionStream === 'undefined') {
+      throw new Error('Este navegador não consegue descompactar este XLSX offline.');
+    }
+    const stream = new Blob([file.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new TextDecoder().decode(await new Response(stream).arrayBuffer());
+  };
+
+  const sheetXml = await readFile(files.some(file => file.name === 'xl/worksheets/sheet1.xml') ? 'xl/worksheets/sheet1.xml' : files.find(file => /xl\/worksheets\/sheet\d+\.xml/.test(file.name))?.name);
+  if (!sheetXml) return [];
+  const sharedXml = await readFile('xl/sharedStrings.xml');
+  const parser = new DOMParser();
+  const sheet = parser.parseFromString(sheetXml, 'application/xml');
+  const shared = sharedXml ? [...parser.parseFromString(sharedXml, 'application/xml').querySelectorAll('si')].map(node => node.textContent) : [];
+  const rows = [...sheet.querySelectorAll('sheetData > row')];
+  const values = rows.map(row => {
+    const result = {};
+    [...row.querySelectorAll(':scope > c')].forEach(cell => {
+      const reference = cell.getAttribute('r') || '';
+      const column = reference.replace(/\d+$/, '');
+      const value = cell.querySelector('v')?.textContent || '';
+      result[column] = cell.getAttribute('t') === 's' ? (shared[Number(value)] || '') : (cell.getAttribute('t') === 'inlineStr' ? cell.textContent : value);
+    });
+    return result;
+  });
+  const headerKeys = Object.keys(values[0] || {}).sort((a, b) => columnNumber(a) - columnNumber(b));
+  const headers = headerKeys.map((key, index) => values[0][key] || `Coluna ${index + 1}`);
+  return values.slice(1).map(row => Object.fromEntries(headers.map((header, index) => [header, row[headerKeys[index]] || ''])));
+}
+
+function readZipInt(view, offset) {
+  return (view[offset] | (view[offset + 1] << 8) | (view[offset + 2] << 16) | (view[offset + 3] << 24)) >>> 0;
+}
+
+function columnNumber(column) {
+  return [...column].reduce((total, letter) => total * 26 + letter.charCodeAt(0) - 64, 0);
 }
 
 function buildFilters() {
